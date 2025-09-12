@@ -24,7 +24,17 @@ Built with **React (Vite)** and powered by **localStorage** for persistent data 
 - Fully local `CRUD` operations with persistence in `localStorage`.  
 - Modular architecture for scalability.  
 - Clean routing with guarded admin-only access.  
-- Responsive UI with simple and effective layout.  
+- Responsive UI with simple and effective layout.
+
+🧑‍💻 Tech Stack
+
+⚛️ Frontend: React (Vite)
+
+🗂 State Management: React Context API
+
+💾 Storage: LocalStorage (browser persistence)
+
+🛣 Routing: React Router v6
 
 ---
 
@@ -39,12 +49,3 @@ npm install
 # Start the development server
 npm run dev
 
-🧑‍💻 Tech Stack
-
-⚛️ Frontend: React (Vite)
-
-🗂 State Management: React Context API
-
-💾 Storage: LocalStorage (browser persistence)
-
-🛣 Routing: React Router v6

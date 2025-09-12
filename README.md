@@ -1,31 +1,50 @@
-## School Management System - Admin Portal (LocalStorage, React)
+# 🏫 School Management System – Admin Portal  
 
-This is a beginner-friendly yet industry-standard scaffold for an Admin Dashboard of a School Management System. It uses React (Vite) and keeps data in the browser's `localStorage`.
+A beginner-friendly yet industry-standard **Admin Dashboard** for a School Management System.  
+Built with **React (Vite)** and powered by **localStorage** for persistent data handling.  
 
-### Features
-- Admin login (credentials: `admin` / `admin123`)
-- Dashboard with sections: Students, Teachers, Courses
-- CRUD for Students, Teachers, Courses (stored in `localStorage`)
-- Admin Profile view/edit (display name)
-- Protected routes and logout
+---
 
-### Run locally
+## ✨ Features  
+
+✅ **Admin Authentication**  
+- Login with credentials:  
+  - **Username:** `admin`  
+  - **Password:** `admin123`  
+- Session management via `localStorage`.  
+- Protected routes with logout support.  
+
+✅ **Dashboard Modules**  
+- **Students** – Add, update, delete, and view student records.  
+- **Teachers** – Manage teacher profiles and details.  
+- **Courses** – Maintain a list of courses offered.  
+- **Profile** – View and update admin display name.  
+
+✅ **Other Highlights**  
+- Fully local `CRUD` operations with persistence in `localStorage`.  
+- Modular architecture for scalability.  
+- Clean routing with guarded admin-only access.  
+- Responsive UI with simple and effective layout.  
+
+---
+
+## 🚀 Getting Started  
+
+Clone the repository and run the project locally:  
+
 ```bash
+# Install dependencies
 npm install
+
+# Start the development server
 npm run dev
-```
 
-### Project Architecture
-- `src/state/AuthContext.jsx`: React context managing admin session via `authService`.
-- `src/storage/authService.js`: LocalStorage-backed authentication service.
-- `src/storage/repositories.js`: Repositories for students, teachers, courses.
-- `src/routes/ProtectedRoute.jsx`: Guards dashboard routes.
-- `src/pages/LoginPage.jsx`: Admin login page.
-- `src/pages/DashboardLayout.jsx`: Sidebar nav, topbar, logout, nested `Outlet`.
-- `src/pages/StudentsPage.jsx`, `TeachersPage.jsx`, `CoursesPage.jsx`: Simple CRUD UIs.
-- `src/pages/ProfilePage.jsx`: Edit display name stored in session.
-- `src/main.jsx`: Router configuration and provider composition.
-- `src/App.jsx`: Root layout that hosts nested routes via `Outlet`.
-- `src/App.css`: Basic styles.
+🧑‍💻 Tech Stack
 
-See `docs/` for detailed documentation.
+⚛️ Frontend: React (Vite)
+
+🗂 State Management: React Context API
+
+💾 Storage: LocalStorage (browser persistence)
+
+🛣 Routing: React Router v6

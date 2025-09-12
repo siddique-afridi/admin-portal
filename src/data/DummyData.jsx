@@ -4,9 +4,11 @@ export const students = [
     name: "Ali",
     rollNo: 1,
     class: 10,
+    age: 20,
+    gender:"female",
+    contact:'03786723432',
    
     details: {
-      age: 20,
       city: "Pindi",
       profession: "Coding",
     },
@@ -16,9 +18,11 @@ export const students = [
     name: "Khan",
     rollNo: 2,
     class: 11,
+    age: 21,
+    gender:"male",
+    contact:'03456754432',
    
     details: {
-      age: 21,
       city: "Karachi",
       profession: "Designing",
     },

@@ -19,7 +19,7 @@ app.use(express.json());
 app.use(passport.initialize());
 
 app.use(cors({
-  origin:[ "http://localhost:5173", "admin-portal-green-zeta.vercel.app"],  // frontend URL
+  origin:[ "http://localhost:5173", "https://admin-portal-green-zeta.vercel.app"],  // frontend URL
   credentials: true,
   exposedHeaders: ["Authorization"], // ✅ allow frontend to read it
 }));

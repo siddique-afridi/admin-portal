@@ -30,8 +30,14 @@ router.get(
 
     const token = jwt.sign(payload, process.env.JWT_SECRET, {expiresIn:'1h'}); 
 
+    const frontendURL =
+      process.env.NODE_ENV === "production"
+        ? "https://admin-portal-green-zeta.vercel.app" // 👈 your deployed frontend
+        : "http://localhost:5173"; // 👈 local developme
+
      // Redirect with JWT to frontend
-     res.redirect(`http://localhost:5173/login-success?token=${token}`);
+     res.redirect(`${frontendURL}/login-success?token=${token}`);
+    //  res.redirect(`http://localhost:5173/login-success?token=${token}`);
      console.log("✅ Google callback reached. User: after", user);
   });
 

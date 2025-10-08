@@ -38,7 +38,9 @@ passport.use(
       {
         clientID: process.env.GOOGLE_CLIENT_ID, 
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        callbackURL: "http://localhost:5000/api/auth/google/callback", // redirect after login
+        callbackURL: process.env.NODE_ENV === "production"
+        ? "https://admin-portal-green-zeta.vercel.app/api/auth/google/callback"
+        : "http://localhost:5000/api/auth/google/callback", // redirect after login
       },
       async (accessToken, refreshToken, profile, done) => {
         try {

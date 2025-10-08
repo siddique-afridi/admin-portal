@@ -9,9 +9,11 @@ const router  = express.Router();
 router.post('/', 
     auth,
      createTeacher);
+
 router.get('/',
      auth,
      getTeachers )
+
 router.delete('/:id',
     auth,
       deleteTeacher)

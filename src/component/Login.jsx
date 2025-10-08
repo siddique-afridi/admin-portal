@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 import { User, Lock } from "lucide-react";
 import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -43,7 +44,7 @@ function Login() {
       if (data.step === "OTP_REQUIRED") {
         setStep("OTP"); //
         setMessage(data.message);
-      } else {
+    } else {  
         setError("Unexpected response. Check backend flow.");
       }
     } catch (err) {
@@ -66,6 +67,12 @@ function Login() {
       if (!res.ok) {
         return setError(data.message || "OTP verification failed");
       }
+
+      // extract message from header of verifyOtp from backend
+      localStorage.setItem("role", data.role);
+
+      toast.success(`${data.message}`, { autoClose: 1500 });
+
 
       const refineToken = res.headers.get("Authorization");
 

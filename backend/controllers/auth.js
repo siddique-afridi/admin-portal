@@ -59,7 +59,7 @@ exports.login = async(req,res )=>{
         user.otpExpiry = Date.now()+  10 * 1000;  // indicates 10s expiry time
         await user.save();
 
-   console.log("Saved user with new OTP:", user);
+   console.log("Saved user with OTP:", user);
    
    const all = await User.find();
    console.log("All users in DB right now:", all.length);
@@ -109,6 +109,10 @@ exports.resendOtp = async (req, res) => {
       user.otpExpiry = Date.now() + 5*60 * 1000; // 5 min
       user.lastOtpSentAt = new Date(); 
       await user.save();
+
+      console.log("Saved user with new OTP:", user);
+   
+
   
       // Setup nodemailer
       const transporter = nodemailer.createTransport({

@@ -1,4 +1,5 @@
-const Teacher = require ('../../models/teacherModel/teachers')
+const Teacher = require ('../../models/teacherModel/teachers');
+const User = require('../../models/User');
 
 
 // Create teacher Logic
@@ -10,6 +11,17 @@ exports.createTeacher = async(req, res)=> {
     // 2 save teacher in some variable so we can send saved teacherdata in response
     //  use await for DB operations 
     const savedTeacher = await teacher.save();
+    
+    // this step is to get email and password from frontend and store them in User collection for login purpose
+    const {email, password} = req.body;
+
+    const user = User.create({
+        email,
+        password,
+        role: "teacher",
+        profile: teacher._id
+    })
+    console.log("User created:", user);
 
     // res.json(savedTeacher); //savedTeacher is sent below , sending twice gives error
     // 3 send response to frontend on success and also send saved teacher details in res body

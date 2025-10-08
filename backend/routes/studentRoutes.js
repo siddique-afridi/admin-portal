@@ -5,6 +5,7 @@ const { getStudents, createStudent, getStudentById, updateStudent, deleteStudent
 // const updateValidator = require('../middleware/studentValidator/updateValidator');
 const upload = require('../config/multerConfig');
 const uploadProfile = require('../controllers/uploadProfile');
+const { authorizeRoles } = require('../middleware/authorizeRoles');
 
 const router = express.Router();
 
@@ -16,11 +17,13 @@ router.get('/',
 router.post('/',
      auth,
     //  validateCreateStudent,
+    authorizeRoles("teacher", "admin"),
       createStudent
     );
 
 router.delete('/:id', 
   auth,
+  authorizeRoles("teacher", "admin"),
    deleteStudent)
 
 console.log("getStudents:", getStudents);

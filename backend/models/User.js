@@ -4,13 +4,17 @@ const bcrypt = require("bcryptjs");
 // step 2 create user schema from mongoose.Schema
 const userSchema = new mongoose.Schema(
 {
-    username: {type:String, required:true},
+    username: {type:String},
     email: {type:String, required:true, unique: true},
     password: {type:String, required:false}, // store hashed password
     googleId: String, // for Google login
     facebookId: String, // for Facebook login
     // enum in mongoose means value must be one of the total values
     role: { type: String, enum: ["admin", "teacher", "student"], default: "admin" },
+    profile: {
+        type: mongoose.Schema.Types.ObjectId,
+        refPath: "role",
+    },
     // otp
     otp: { type: String, default: null },
     otpExpiry: { type: Date, default: null }   ,

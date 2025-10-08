@@ -66,7 +66,11 @@ function Students() {
   // fetch teachers to store them in state to display them on ui in select
   useEffect(() => {
     const fetchTeachers = async () => {
-      const data = await getTeachers();
+      const token = localStorage.getItem("token");
+      if(!token){
+        console.log("no token in localstorage")
+      }
+      const data = await getTeachers(token);
 
       setTeachers(data);
       console.log("i am teachers array", data);
@@ -86,6 +90,8 @@ function Students() {
       try {
         const studentData = {
           name: newStudent.name,
+          email: newStudent.email,
+          password: newStudent.password,
           class: newStudent.class,
           age: newStudent.age,
           gender: gender,
@@ -93,6 +99,7 @@ function Students() {
           teacher: newStudent.teacher,
         };
         // Call backend to save in DB
+        const token = localStorage.getItem("token")
         const savedStudent = await createStudent(studentData,token);
         console.log("Selected student:", selectedStudent);
         // update with new student
@@ -101,7 +108,8 @@ function Students() {
         // Reset form
         setNewStudent({
           name: "",
-
+          email: "",
+          password:"",
           class: "",
           age: "",
           city: "",
@@ -113,7 +121,7 @@ function Students() {
         console.log("checking...");
         setGender("");
         toast.success(
-          `Student added successfully! Now upload profile for  ${savedStudent.name}`
+          `Student added successfully! Now upload profile for ${savedStudent.name}`
         );
       } catch (error) {
         console.error("Error creating student:", error);
@@ -259,6 +267,25 @@ function Students() {
                 className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
               />
+
+              <input 
+              type="email"
+              name="email"
+              placeholder="Enter email"
+              value={newStudent.email}
+              onChange={handleChange}
+              className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              required />
+
+              <input 
+              type="password"
+              name="password"
+              placeholder="Enter password"
+              value={newStudent.password}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              required />
+
               <div className="flex gap-2.5">
                 <input
                   type="text"

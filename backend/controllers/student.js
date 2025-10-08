@@ -1,6 +1,7 @@
 
 const Student = require ('../models/Students');
 const getNextRollNo = require("../utils/studentRoll")
+const User = require('../models/User')
 
 // Get All Students (with filters)
 exports.getStudents = async (req, res) => {
@@ -44,13 +45,33 @@ exports.createStudent = async(req, res)=> {
   console.log("Incoming student data:", req.body);
     try{
       const rollNo = await getNextRollNo();
+
         const student = new Student({
             ...req.body,
             rollNo
         });
-    
         await student.save();
-        res.status(201).json(student);
+        console.log("student data", student)
+        // res.status(201).json(student);
+
+        const {email,password} = req.body;
+        console.log("email", email)
+        
+        try {
+          const user = await User.create({
+            email,
+            password,
+            role: "student",
+            profile: student._id
+          });
+          console.log("User created:", user);
+        } catch (err) {
+          console.error("Error creating user:", err);
+        }
+        
+       
+      res.json({message: "Student added successfully",student})
+        
 
     }catch(err){
         return res.status(400).json({message: "Error creating student", error: err.message});

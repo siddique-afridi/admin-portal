@@ -5,13 +5,10 @@ export const createTeacher = async(teacherData,token) => {
     const res = await fetch(API_URL,{
         method: "POST",
         headers: {
-            "Content-Type": "application/json",
-            headers: {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${token}`
               },
            
-          },
         body: JSON.stringify(teacherData)
     })
     return res.json()

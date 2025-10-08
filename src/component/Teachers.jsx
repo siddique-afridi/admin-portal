@@ -19,6 +19,7 @@ function Teachers() {
 const [search, setSearch] = useState("")
 
 const token = localStorage.getItem("token")
+console.log("token", token)
 
 // const filteredTeachers = teachers.filter((teacher)=>
 //  teacher.name.toLowerCase().includes(search.toLowerCase()));
@@ -48,8 +49,11 @@ const token = localStorage.getItem("token")
 
     if (newTeacher.name && newTeacher.subject) {       // just making it necessary to have name and subject in order to send data
       try{
-        const teacherData = {                                //step 4 preparing data that we want to send to backend inside createTeacher().
+        const teacherData = {    
+                                      //step 4 preparing data that we want to send to backend inside createTeacher().
         name: newTeacher.name,
+        email: newTeacher.email,
+        password: newTeacher.password,
         subject: newTeacher.subject,
         contact: newTeacher.contact,
         gender: newTeacher.gender,
@@ -64,6 +68,8 @@ const token = localStorage.getItem("token")
       //it resets the form to empty values
       setNewTeacher({ 
         name: '',
+        email: '',
+        password: '',
          subject: '',
          contact:'',
          gender:'',
@@ -162,6 +168,25 @@ const token = localStorage.getItem("token")
                 className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
               />
+
+           <input 
+              type="email"
+              name="email"
+              placeholder="Enter email"
+              value={newTeacher.email}
+              onChange={handleChange}
+              className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              required />
+
+              <input 
+              type="password"
+              name="password"
+              placeholder="Enter password"
+              value={newTeacher.password}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              required />
+
               <div className="flex gap-2.5">
 
               <input

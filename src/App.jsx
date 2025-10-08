@@ -45,7 +45,7 @@ function App() {
               <DashboardLayout >
                 <Teachers />
               </DashboardLayout>
-            </ProtectedRoute>
+             </ProtectedRoute>
           }
           />
 
@@ -56,7 +56,7 @@ function App() {
              <DashboardLayout>
                 <Courses />
               </DashboardLayout>
-            </ProtectedRoute>
+             </ProtectedRoute>
           }
           />
 
@@ -67,7 +67,7 @@ function App() {
              <DashboardLayout>
                 <Students />
               </DashboardLayout>
-            </ProtectedRoute>
+             </ProtectedRoute>
           }
           />
 
@@ -78,7 +78,7 @@ function App() {
               <DashboardLayout>
                 <AdminProfile />
               </DashboardLayout>
-            </ProtectedRoute>
+             </ProtectedRoute>
           }
           />
 

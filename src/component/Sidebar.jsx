@@ -18,8 +18,8 @@ return (
   <>
     {/* // <div className="flex gap-2.5  flex-row min-h-screen bg-gray-200 border border-amber-300"> */}
       {/* Sidebar */}
-      <div className="w-64 pl-2 text-gray-900 fixed top-0 left-0 h-full  overflow-y-autow-64 bg-white border-r border-gray-200 min-h-screen">
-        <div className=' border-b border-gray-200 h-17  flex items-center '>
+      <div className="w-64 pl-2 dark:bg-gray-400 text-gray-900 fixed top-0 left-0 h-full  overflow-y-autow-64 bg-white border-r border-gray-200 min-h-screen">
+        <div className=' border-b border-gray-200 h-17 dark:bg-gray-500  flex items-center '>
 
         <img
     src={logo}

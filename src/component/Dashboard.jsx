@@ -1,47 +1,142 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "./AuthContext";
 import { useNavigate } from "react-router-dom";
-import { students as initialStudents } from "../data/DummyData";
-import { teachers as initialTeachers } from "../data/DummyData";
-import { courses as initialCourses } from "../data/DummyData";
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer,LabelList
+} from "recharts";
+// import { getStudents } from "../api/studentApi";
+// import { getTeachers } from "../api/teacherApi";
+// import { getClassStats } from "../api/statsApi";
+import { getDashboardData } from "../api/dashboardApi";
 
 function Dashboard() {
+  // const [chartData,setChartData] = useState([]);
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
 
   const [students, setStudents] = useState([]);
   const [teachers, setTeachers] = useState([]);
-  const [courses, setCourses] = useState([]);
+  const [classStats, setClassStats] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!isLoggedIn) {
-      navigate("/login");
-      return;
-    }
 
-    // Load data from localStorage or fallback
-    const storedStudents = JSON.parse(localStorage.getItem("students")) || initialStudents;
-    const storedTeachers = JSON.parse(localStorage.getItem("teachers")) || initialTeachers;
-    const storedCourses = JSON.parse(localStorage.getItem("courses")) || initialCourses;
 
-    setStudents(storedStudents);
-    setTeachers(storedTeachers);
-    console.log('[Dashboard] teachers loaded:', storedTeachers);
-    setCourses(storedCourses);
-  }, [isLoggedIn, navigate]);
+  // useEffect(() => {
+  //   if (!isLoggedIn) {
+  //     navigate("/login");
+  //     return;
+  //   }
+    // lets fetch total teachers
+  //     const fetchTeachers = async()=>{
 
-  if (!isLoggedIn) return null;
+  //       try{
+  //         const token = localStorage.getItem("token")
+  //         const data = await getTeachers(token);
+  //         setTeachers(data);
+  //         console.log("Teachers loaded", data);
+  
+  //       }catch(err){
+  //         console.error("Error fetching teachers", err)
+  //       }
+
+  //     }
+
+  //     fetchTeachers();
+
+  // }, [isLoggedIn, navigate]);
+
+
+  // useEffect(() => {
+  //   const fetchClassStats = async()=>{
+  //     const data = await getClassStats();
+  //     setClassStats(data);
+  //   }
+  //   fetchClassStats();
+  // }, [isLoggedIn, navigate]);
+
+  // here we fetch student data and grouped  it by class
+  // useEffect(() => {
+    
+  //   const fetchStudents= async()=>{
+  //     try{
+  //       const data = await getStudents();
+  //       setStudents(data);
+        
+  //       // now we group by class
+  //       const groupedByClass = data.reduce((acc, student)=>{
+  //         acc[student.class] = (acc[student.class]||0) +1;
+          
+  //         return acc;
+  //       },{});
+  //       console.log("groupedByClass",groupedByClass)
+
+  //       const formatted = Object.keys(groupedByClass).map(cls =>({
+  //         class: `Class ${cls}`,
+  //         // grade: cls,
+  //         students:groupedByClass[cls]
+          
+  //       }));
+  //       console.log("formatted data",formatted)
+        
+        // setChartData(formatted);
+        
+  //     }
+  //     catch(err){
+  //       console.error("Error fetching students", err)
+  //     }
+  //   }
+
+  //   fetchStudents();
+  // }, [isLoggedIn, navigate])
+
+  // console.log("chartdata", chartData)
+    
+  // if (!isLoggedIn) return null;
 
   // inside Dashboard component after fetching data
 
 
+// one API call
+useEffect(() => {
+  console.log("in dashboard")
+  if (!isLoggedIn) {
+    navigate("/login");
+    return;
+  }
+
+  const fetchDashboard = async () => {
+    try {
+      setLoading(true);
+      const data = await getDashboardData();
+      setTeachers(data.teachers || []);
+      setStudents(data.students || []);
+      setClassStats(data.stats || []);
+      console.log("Dashboard data loaded:", data);
+    } catch (err) {
+      console.error("Error fetching dashboard data:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchDashboard();
+}, [isLoggedIn, navigate]);
+
+if (!isLoggedIn) return null;
+if (loading) return <div className="p-8">Loading Dashboard...</div>;
+
+
+
+
+
 
   return (
-    <div className="flex-1 p-8 bg-white rounded-tl-2xl rounded-bl-2xl shadow-sm ">
+    <div className="flex-1 p-8 bg-white dark:bg-black shadow-sm ">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      
+      <div className="grid dark:bg-amber-800 grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="p-6 bg-[linear-gradient(84deg,rgba(255,255,255,0)_-8.3%,#F6F8FA_100%)] rounded-lg shadow text-center">
-          <h2 className="text-xl font-bold text-gray-800">Students</h2>
+          <h2 className="text-xl dark:text-amber-400 font-bold text-gray-800">Students</h2>
           <p className="text-3xl font-semibold text-blue-700">{students.length}</p>
         </div>
         <div className="p-6 bg-[linear-gradient(84deg,rgba(255,255,255,0)_-8.3%,#F6F8FA_100%)] rounded-lg shadow text-center">
@@ -50,9 +145,37 @@ function Dashboard() {
         </div>
         <div className="p-6 bg-[linear-gradient(84deg,rgba(255,255,255,0)_-8.3%,#F6F8FA_100%)] rounded-lg shadow text-center">
           <h2 className="text-xl font-bold text-gray-800">Courses</h2>
-          <p className="text-3xl font-semibold text-yellow-700">{courses.length}</p>
+          {/* <p className="text-3xl font-semibold text-yellow-700">{courses.length}</p> */}
         </div>
       </div>
+
+      <ResponsiveContainer width="100%" height={400}>
+  <BarChart data={classStats}>
+    <CartesianGrid strokeDasharray="3 3" />
+    <XAxis dataKey="class" fill="#8884d8" />
+    <YAxis />
+    <Tooltip
+      // formatter={(value, name, props) => {
+      //   if (name === "teacherCount") {
+      //     // show teacher names in tooltip
+      //     const teachers = props.payload.teacherAssigned || [];
+      //     return [`${value} (${teachers.join(", ")})`, "Teachers"];
+      //   }
+      //   return [value, name];
+      // }}
+    />
+    <Bar dataKey="totalStudents" fill="#1194d8" />
+    <Bar dataKey="teacherCount" fill="#8884d8" name="Teachers">
+  <LabelList
+    dataKey="teacherAssigned" // array of names
+    position="top"
+    formatter={(names) => names.join(", ")} // turn array → string
+  />
+</Bar>
+
+  </BarChart>
+</ResponsiveContainer>
+
 
 {/* recent activity card */}
 
@@ -62,14 +185,14 @@ function Dashboard() {
           <h2 className="text-lg font-semibold text-gray-700">Recent Students</h2>
           <button
             onClick={() => navigate("/students")}
-            className="text-blue-600 hover:underline"
+            className="text-blue-600 hover:underline hover:cursor-pointer"
           >
             View All
           </button>
         </div>
         <ul className="divide-y divide-gray-200">
           {students.slice(-5).map((s) => (
-            <li key={s.id} className="py-2">
+            <li key={s._id} className="py-2">
               <span className="font-medium">{s.name}</span> – Class {s.class}
             </li>
           ))}
@@ -82,14 +205,14 @@ function Dashboard() {
           <h2 className="text-lg font-semibold text-gray-700">Recent Teachers</h2>
           <button
             onClick={() => navigate("/teachers")}
-            className="text-blue-600 hover:underline"
+            className="text-blue-600 hover:underline hover:cursor-pointer"
           >
             View All
           </button>
         </div>
         <ul className="divide-y divide-gray-200">
           {teachers.slice(-5).map((t) => (
-            <li key={t.id} className="py-2">
+            <li key={t._id} className="py-2">
               <span className="font-medium">{t.name}</span> – {t.subject}
             </li>
           ))}
@@ -102,18 +225,18 @@ function Dashboard() {
           <h2 className="text-lg font-semibold text-gray-700">Recent Courses</h2>
           <button
             onClick={() => navigate("/courses")}
-            className="text-blue-600 hover:underline"
+            className="text-blue-600 hover:underline hover:cursor-pointer"
           >
             View All
           </button>
         </div>
-        <ul className="divide-y divide-gray-200">
+        {/* <ul className="divide-y divide-gray-200">
           {courses.slice(-5).map((c) => (
             <li key={c.id} className="py-2">
               <span className="font-medium">{c.name || c.title}</span> – {c.teacher || c.code}
             </li>
           ))}
-        </ul>
+        </ul> */}
       </div>
 
     </div>

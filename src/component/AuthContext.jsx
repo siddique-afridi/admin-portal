@@ -7,11 +7,12 @@ export function AuthProvider({ children }) {
         localStorage.getItem("isLoggedIn") === "true"
     );
 
-const login = (username, password)=>{
+const login = (token)=>{
  
-    if(username === "admin" && password === "admin123"){
+    if(token){
         setIsLoggedIn(true)
         localStorage.setItem("isLoggedIn", "true" );
+        localStorage.setItem("token", token );
         return true
     }else{
         return false
@@ -20,6 +21,7 @@ const login = (username, password)=>{
 const logout = ()=>{
     setIsLoggedIn(false)
     localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("token");
 }
 
     return (

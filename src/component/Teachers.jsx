@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
-import { teachers as initialTeachers } from '../data/DummyData';
+import React, { useEffect, useState } from 'react';
+// import { teachers as initialTeachers } from '../data/DummyData';
 import Table from './Table';
 import { toast } from "react-toastify";
+import {createTeacher, deleteTeacher, getTeachers} from '../api/teacherApi';
+
 
 
 function Teachers() {
@@ -10,48 +12,88 @@ function Teachers() {
  
   const [isOpen, setIsOpen] = useState(false);
 
-  const [teachers, setTeachers] = useState(() => {
-    const saved = localStorage.getItem("teachers");
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      return parsed.length > 0 ? parsed : initialTeachers;
-    }
-    return initialTeachers;
-  });
+  const [teachers, setTeachers] = useState([]);    // step 1 state to load and save created teachers from backend
 
-  const [newTeacher, setNewTeacher] = useState({ name: '', subject: '' });
+  const [newTeacher, setNewTeacher] = useState({ name: '', subject: '' });    // step 2 state to input details that we want to send to backend to store 
 
 const [search, setSearch] = useState("")
 
-const filteredTeachers = teachers.filter((teacher)=>
- teacher.name.toLowerCase().includes(search.toLowerCase()));
+const token = localStorage.getItem("token")
+
+// const filteredTeachers = teachers.filter((teacher)=>
+//  teacher.name.toLowerCase().includes(search.toLowerCase()));
+
+   const fetchTeachers = async()=> {
+   
+    const data = await getTeachers(token);
+
+    setTeachers(data);
+   }
+
+   useEffect(()=>{
+    fetchTeachers();
+
+   }, [])
+
+
 
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setNewTeacher((prev) => ({ ...prev, [name]: value }));
+    const { name, value } = e.target;                            // step 3 targeted name and value of input
+    setNewTeacher((prev) => ({ ...prev, [name]: value }));       // we are spreading newTeacher to include other keys and values from the inputs if we want to add in future and saving its state
   };
 
-  const handleAdd = (e) => {
+  const handleAdd = async(e) => {                         
     e.preventDefault();
-    if (newTeacher.name && newTeacher.subject) {
-      const updated = [
-        ...teachers,
-        { id: Date.now(), createdAt: new Date().toISOString(), ...newTeacher }
-      ];
-      setTeachers(updated);
-      localStorage.setItem("teachers", JSON.stringify(updated));
-      setNewTeacher({ name: '', subject: '' });
+
+    if (newTeacher.name && newTeacher.subject) {       // just making it necessary to have name and subject in order to send data
+      try{
+        const teacherData = {                                //step 4 preparing data that we want to send to backend inside createTeacher().
+        name: newTeacher.name,
+        subject: newTeacher.subject,
+        contact: newTeacher.contact,
+        gender: newTeacher.gender,
+        age: newTeacher.age,
+        class: newTeacher.class
+
+      }                                                  // step 5 calling the api to create teacher
+      // now lets call api and send the data to backend
+      const savedTeacher = await createTeacher(teacherData,token)    //we called createTeacher() but what data to send>>> so write teacherData inside>>> ()
+      setTeachers([...teachers, savedTeacher]);
+
+      //it resets the form to empty values
+      setNewTeacher({ 
+        name: '',
+         subject: '',
+         contact:'',
+         gender:'',
+         age:'',
+         class:''
+         });
+
       setIsOpen(false);
+     
        // ✅ Show success toast
     toast.success("Teacher added successfully!");
+    }catch(error){
+      toast.error('Failed to delete teacher')
+      console.error('Error creating teacher', error)
+
     }
+  }
   };
 
-  const handleDelete = (id) => {
-    const updated = teachers.filter((teacher) => teacher.id !== id);
-    setTeachers(updated);
-    localStorage.setItem("teachers", JSON.stringify(updated));
+  const handleDelete = async(id) => {
+  try{
+    const token = localStorage.getItem("token")
+     await deleteTeacher(id,token);
+   const updated = teachers.filter((t)=> t._id != id);
+
+   setTeachers(updated);
+   toast.success('Teacher deleted successfully')
+  }catch(error){
+    toast.error('Failed to delete teacher')
+  }
   };
 
   const handleView = (teacher) => {
@@ -61,6 +103,9 @@ const filteredTeachers = teachers.filter((teacher)=>
   const columns = [
     { key: "name", label: "Name" },
     { key: "subject", label: "Subject" },
+    { key: "contact", label: "Contact" },
+    { key: "gender", label: "Gender" },
+    { key: "age", label: "Age" },
   ];
   
 
@@ -86,7 +131,9 @@ const filteredTeachers = teachers.filter((teacher)=>
         </div>
 
         {/* Table */}
-        {search.trim()==="" ? (
+
+        <Table data={teachers} columns={columns} onDelete={handleDelete} onView={handleView}/>
+        {/* {search.trim()==="" ? (
 
           <Table data={teachers} columns={columns} onDelete={handleDelete} onView={handleView}/>
         ) : filteredTeachers.length>0 ? (
@@ -95,7 +142,7 @@ const filteredTeachers = teachers.filter((teacher)=>
             <p className='text-center text-gray-500'>No teacher found matching "{search}"</p>
           )
 
-        }
+        } */}
 
       </div>
 
@@ -115,12 +162,53 @@ const filteredTeachers = teachers.filter((teacher)=>
                 className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
               />
+              <div className="flex gap-2.5">
 
               <input
                 type="text"
                 name="subject"
                 placeholder="Enter subject"
                 value={newTeacher.subject}
+                onChange={handleChange}
+                className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                required
+              />
+              <input
+                type="text"
+                name="class"
+                placeholder="Enter class"
+                value={newTeacher.class}
+                onChange={handleChange}
+                className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                required
+              />
+
+              </div>
+
+
+              <input
+                type="text"
+                name="age"
+                placeholder="Enter your age"
+                value={newTeacher.age}
+                onChange={handleChange}
+                className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                required
+              />
+              <input
+                type="text"
+                name="gender"
+                placeholder="Gender..."
+                value={newTeacher.gender}
+                onChange={handleChange}
+                className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                required
+              />
+              <input
+                type="text"
+                name="contact"
+                placeholder="Enter contact details"
+                value={newTeacher.contact}
                 onChange={handleChange}
                 className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required

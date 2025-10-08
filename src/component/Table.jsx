@@ -62,14 +62,16 @@ function Table({ data, columns, onDelete, rowsPerPage = 5, onView }) {
             {paginatedData.length > 0 ? (
               paginatedData.map((item) => (
                 <tr
-                  key={item.id}
+                  key={item._id}
                   className="odd:bg-white even:bg-gray-50 hover:bg-gray-100 transition"
                 >
-                  {columns.map((col) => (
-                    <td key={col.key} className="py-3 px-4">
-                      {item[col.key]}
-                    </td>
-                  ))}
+                 {columns.map((col) => (
+  <td key={col.key} className="py-3 px-4">
+    {typeof item[col.key] === "object" && item[col.key] !== null
+      ? item[col.key].name || "N/A" // show teacher name if teacher object
+      : item[col.key]}
+  </td>
+))}
                   <td className="py-3 px-4 text-right">
                     <button
                       onClick={() => onView(item)}
@@ -78,7 +80,7 @@ function Table({ data, columns, onDelete, rowsPerPage = 5, onView }) {
                       View
                     </button>
                     <button
-                      onClick={() => onDelete(item.id)}
+                      onClick={() => onDelete(item._id)}
                       className="px-3 py-1 border border-gray-300 text-gray-600 rounded-md hover:border-red-500 hover:text-red-600 transition"
                     >
                       Delete

@@ -1,23 +1,55 @@
 import React, { useState, useEffect } from "react";
-import { students as initialStudents } from "../data/DummyData";
 import Table from "./Table";
+import { createStudent, getStudents, deleteStudent } from "../api/studentApi";
 import { toast } from "react-toastify";
+import ClassSelect from "../component/ui/ClassSelect";
+import { CSVLink } from "react-csv";
+import { ProfileImageUpload } from "./ProfileImageUpload";
+import { getTeachers } from "../api/teacherApi";
 
 function Students() {
+  const [teachers, setTeachers] = useState([]); //for storing teachers
+
+  const [selectedClass, setSelectedClass] = useState(""); // class filter
+
   const [isOpen, setIsOpen] = useState(false);
+
+  const [students, setStudents] = useState([]); //empty array in state to store students state loaded from backend through fetchData().
 
   const [newStudent, setNewStudent] = useState({
     name: "",
-    rollNo: "",
     class: "",
+    age: "",
+    teacher: ""
   });
-  const [selectedStudent, setSelectedStudent] = useState(null); // 👈 for details modal
+  const [selectedStudent, setSelectedStudent] = useState(null); //  for details modal
 
   // filtering
   const [search, setSearch] = useState("");
 
   // use state for selecting gender
   const [gender, setGender] = useState("");
+
+  //fetch students when page loads//////////////
+  // Fetch students (with filters if applied)
+  const fetchData = async () => {
+    try {
+      const filters = {};
+      if (search) filters.search = search; // add search if typed
+      if (selectedClass) filters.class = selectedClass; // add class if chosen
+
+      const data = await getStudents(filters);
+      setStudents(data);
+    } catch (err) {
+      console.error("Error fetching students", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+    // the empty array below means as long as we are on students component data will not be fetched again from backend
+  }, [search, selectedClass]);
+  // //////////////////////////
 
   useEffect(() => {
     if (selectedStudent) {
@@ -31,102 +63,140 @@ function Students() {
     };
   }, [selectedStudent]);
 
+  // fetch teachers to store them in state to display them on ui in select
+  useEffect(() => {
+    const fetchTeachers = async () => {
+      const data = await getTeachers();
+
+      setTeachers(data);
+      console.log("i am teachers array", data);
+    };
+
+    fetchTeachers();
+  }, []);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setNewStudent((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleAdd = (e) => {
+  const handleAdd = async (e) => {
     e.preventDefault();
-    if (newStudent.name && newStudent.rollNo && newStudent.class) {
-      const updated = [
-        ...students,
-        {
-          id: Date.now(),
+    if (newStudent.name && newStudent.class) {
+      try {
+        const studentData = {
           name: newStudent.name,
-          rollNo: newStudent.rollNo,
           class: newStudent.class,
-          contact: newStudent.contact,
-          gender: gender,
           age: newStudent.age,
-          details: {
-            city: newStudent.city || "",
-            profession: newStudent.profession || "",
-            
-          },
-        },
-      ];
+          gender: gender,
+          contact: newStudent.contact,
+          teacher: newStudent.teacher,
+        };
+        // Call backend to save in DB
+        const savedStudent = await createStudent(studentData,token);
+        console.log("Selected student:", selectedStudent);
+        // update with new student
+        setStudents([...students, savedStudent]);
+
+        // Reset form
+        setNewStudent({
+          name: "",
+
+          class: "",
+          age: "",
+          city: "",
+          profession: "",
+          contact: "",
+          teacher: ""
+        });
+        setIsOpen(false);
+        console.log("checking...");
+        setGender("");
+        toast.success(
+          `Student added successfully! Now upload profile for  ${savedStudent.name}`
+        );
+      } catch (error) {
+        console.error("Error creating student:", error);
+      }
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      const token = localStorage.getItem("token"); // ✅ get token
+      console.log("delete id", id)
+
+      if (!token) {
+        alert("You are not logged in!");
+        return;
+      }
+      await deleteStudent(id,token);
+
+      const updated = students.filter((s) => s._id !== id);
       setStudents(updated);
-      localStorage.setItem("students", JSON.stringify(updated));
-      setNewStudent({
-        name: "",
-        rollNo: "",
-        class: "",
-        age: "",
-        city: "",
-        profession: "",
-        contact: "",
-      });
-      setIsOpen(false);
-      setGender("");
-      toast.success("Student added successfully!");
+      toast.success("Student deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting student", error);
+      toast.error("Failed to delete student");
     }
-  };
-
-  const handleDelete = (id) => {
-    const updated = students.filter((s) => s.id !== id);
-    setStudents(updated);
-
-    if (updated.length === 0) {
-      // remove key completely if no students left
-      localStorage.removeItem("students");
-    } else {
-      localStorage.setItem("students", JSON.stringify(updated));
-    }
-  };
-
-  const [students, setStudents] = useState(() => {
-    const saved = localStorage.getItem("students");
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      return parsed.length > 0 ? parsed : initialStudents;
-    }
-    return initialStudents;
-  });
-
-  const handleView = (student) => {
-    setSelectedStudent(student);
   };
 
   const columns = [
     { key: "name", label: "Name" },
     { key: "rollNo", label: "Roll No" },
     { key: "class", label: "Class" },
+    { key: "teacher", label: "Teacher" },
     { key: "age", label: "Age" },
     { key: "gender", label: "Gender" },
     { key: "contact", label: "Contact" },
   ];
 
-  const filteredStudents = students.filter((student) =>
-    (student.name || "").toLowerCase().includes(search.toLowerCase())
-  );
+  // const filteredStudents = students.filter((student) =>
+  //   (student.name || "").toLowerCase().includes(search.toLowerCase())
+  // );
+
+  const handleView = (student) => {
+    setSelectedStudent(student);
+  };
 
   // creating labels for radio buttons
   const options = ["male", "female", "other"];
+
+  // CSV headers
+  const headers = [
+    { label: "Name", key: "name" },
+    { label: "Roll No", key: "rollNo" }, // optional if not used
+    { label: "Class", key: "class" },
+    { label: "Age", key: "age" },
+    { label: "Gender", key: "gender" },
+    { label: "Contact", key: "contact" },
+  ];
+  // CSV download option for downloading record
+  // 1 install and import dependencies
+  // 2 paste the header like above according to columns
+  // 3 paste download button inside return above table
 
   return (
     <div className="flex ">
       <div className="flex-1 p-8 bg-white shadow-sm">
         {/* Page Header */}
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-semibold text-gray-800">Students</h1>
+          <h1 className="text-2xl dark:bg-black font-semibold text-gray-800">
+            Students
+          </h1>
+
+          {/* from headless ui library */}
+          <ClassSelect
+            selectedClass={selectedClass}
+            setSelectedClass={setSelectedClass}
+          />
 
           <input
             type="text"
             value={search}
             placeholder="Search student..."
             onChange={(e) => setSearch(e.target.value)}
-            className="border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            className="border px-2 py-1 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
           />
 
           <button
@@ -137,15 +207,27 @@ function Students() {
           </button>
         </div>
 
-        {/* Reusable Table */}
-        {search.trim() === "" ? (
-          <Table
+        {/* Download button */}
+        <div className="flex justify-end mb-3">
+          <CSVLink
             data={students}
-            columns={columns}
-            onDelete={handleDelete}
-            onView={handleView}
-          />
-        ) : filteredStudents.length > 0 ? (
+            headers={headers}
+            filename={"students.csv"}
+            className="px-4 py-2 border text-green-500 border-green-600 hover:text-white rounded-lg shadow hover:bg-green-600 transition"
+          >
+            Download CSV
+          </CSVLink>
+        </div>
+
+        {/* Reusable Table */}
+        {/* {search.trim() === "" ? ( */}
+        <Table
+          data={students}
+          columns={columns}
+          onDelete={handleDelete}
+          onView={handleView}
+        />
+        {/* ) : filteredStudents.length > 0 ? (
           <Table
             data={filteredStudents}
             columns={columns}
@@ -156,7 +238,7 @@ function Students() {
           <p className="text-center text-gray-500">
             No students found matching "{search}"
           </p>
-        )}
+        )} */}
       </div>
 
       {/* Add Student Modal */}
@@ -177,30 +259,33 @@ function Students() {
                 className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
               />
-<div className="flex gap-2.5">
+              <div className="flex gap-2.5">
+                <input
+                  type="text"
+                  name="class"
+                  placeholder="Enter class"
+                  pattern="^\d$"
+                  value={newStudent.class}
+                  onChange={handleChange}
+                  className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  required
+                />
+                <select
+                  name="teacher"
+                  value={newStudent.teacher}
+                  onChange={handleChange}
+                  className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  required
+                >
+                  <option value="">Select Teacher</option>
+                  {teachers.map((t) => (
+                    <option key={t._id} value={t._id}>
+                      {t.name} ({t.subject})
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-              <input
-                type="text"
-                name="rollNo"
-                placeholder="Enter roll number"
-                pattern="^\d{2}$"
-                value={newStudent.rollNo}
-                onChange={handleChange}
-                className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                required
-              />
-
-              <input
-                type="text"
-                name="class"
-                placeholder="Enter class"
-                pattern="^\d$"
-                value={newStudent.class}
-                onChange={handleChange}
-                className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                required
-              />
-</div>
               <input
                 type="text"
                 name="age"
@@ -211,7 +296,6 @@ function Students() {
                 className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
               />
-
 
               <input
                 type="text"
@@ -224,7 +308,7 @@ function Students() {
                 className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
               />
-              <p className="font-semibold mb-1">Gender ?</p>
+              <p className="font-semibold mb-1">Gender</p>
               <div className="flex gap-2">
                 {options.map((option) => (
                   <label
@@ -283,44 +367,80 @@ function Students() {
               </button>
             </div>
 
+            {/* Show profile image if exists */}
+            {selectedStudent.profileImage && (
+              <div className="flex justify-center mb-4">
+                <img
+                  src={`http://localhost:5000/uploads/${selectedStudent.profileImage}`}
+                  alt={selectedStudent.name}
+                  className="w-24 h-24 rounded-full border"
+                />
+              </div>
+            )}
+
+            {/* Upload Profile Image */}
+            <ProfileImageUpload
+              uploadUrl="http://localhost:5000/api/students/upload-profile"
+              entityId={selectedStudent._id}
+              onUploadSuccess={(data) => {
+                // Update student state with new profile image
+                setStudents((prev) =>
+                  prev.map((s) =>
+                    s._id === data.student._id
+                      ? { ...s, profileImage: data.student.profileImage }
+                      : s
+                  )
+                );
+                setSelectedStudent(data.student);
+              }}
+            />
+
             {/* Student Info Grid */}
             <div className="grid grid-cols-1 gap-4 text-gray-700">
-  {Object.entries(selectedStudent).map(([key, value]) => {
-    // Skip the 'id' field
-    if (key === "id") return null;
+              {Object.entries(selectedStudent).map(([key, value]) => {
+                // Skip the 'id' field
+                if (key === "_id") return null;
 
-    // Handle nested 'details' object
-    if (key === "details" && typeof value === "object" && value !== null) {
-      return (
-        <div key={key} className="space-y-2">
-          <h3 className="text-lg font-semibold text-gray-800 capitalize mt-4">
-            {key}
-          </h3>
-          {Object.entries(value).map(([subKey, subValue]) => (
-            <div
-              key={`${key}-${subKey}`}
-              className="flex justify-between bg-gray-50 p-3 rounded-lg shadow-sm"
-            >
-              <span className="capitalize font-medium">{subKey}:</span>
-              <span className="text-gray-800">{subValue ?? "N/A"}</span>
+                // Handle nested 'details' object
+                if (
+                  key === "details" &&
+                  typeof value === "object" &&
+                  value !== null
+                ) {
+                  return (
+                    <div key={key} className="space-y-2">
+                      <h3 className="text-lg font-semibold text-gray-800 capitalize mt-4">
+                        {key}
+                      </h3>
+                      {Object.entries(value).map(([subKey, subValue]) => (
+                        <div
+                          key={`${key}-${subKey}`}
+                          className="flex justify-between bg-gray-50 p-3 rounded-lg shadow-sm"
+                        >
+                          <span className="capitalize font-medium">
+                            {subKey}:
+                          </span>
+                          <span className="text-gray-800">
+                            {subValue ?? "N/A"}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                }
+
+                // Handle top-level properties
+                return (
+                  <div
+                    key={key}
+                    className="flex justify-between bg-gray-50 p-3 rounded-lg shadow-sm"
+                  >
+                    <span className="capitalize font-medium">{key}:</span>
+                    <span className="text-gray-800">{value ?? "N/A"}</span>
+                  </div>
+                );
+              })}
             </div>
-          ))}
-        </div>
-      );
-    }
-
-    // Handle top-level properties
-    return (
-      <div
-        key={key}
-        className="flex justify-between bg-gray-50 p-3 rounded-lg shadow-sm"
-      >
-        <span className="capitalize font-medium">{key}:</span>
-        <span className="text-gray-800">{value ?? "N/A"}</span>
-      </div>
-    );
-  })}
-</div>
           </div>
         </div>
       )}

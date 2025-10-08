@@ -3,13 +3,14 @@ import Sidebar from "./Sidebar";
 import Header from "./Header";
 
 
-const DashboardLayout = ({ children }) => {
+
+const DashboardLayout = ({ children}) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
+    <div className="min-h-screen dark:bg-black flex bg-gray-50">
       {/* Sidebar */}
       <div
         className={`fixed top-0 left-0 h-full bg-white border-r border-gray-200 transition-all duration-300 z-20 ${
@@ -28,7 +29,7 @@ const DashboardLayout = ({ children }) => {
         {/* Pass toggle function and sidebar state */}
         <Header toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
      
-        <main className="mt-11 pt-5 ">{children}</main>
+        <main className="mt-11 pt-5 dark:bg-black">{children}</main>
       </div>
     </div>
   );

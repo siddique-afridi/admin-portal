@@ -1,55 +1,111 @@
-import React, { useState } from "react";
-import { courses as initialCourses } from "../data/DummyData";
+import React, { useState, useEffect } from "react";
+// import { courses as initialCourses } from "../data/DummyData";
 import Table from "./Table";
 import { toast } from "react-toastify";
+import { createCourse, deleteCourseById, getAllCourses } from "../api/coursesApi";
+import { getTeachers } from "../api/teacherApi";
+
 
 function Courses() {
+  const token = localStorage.getItem("token")
   const [isOpen, setIsOpen] = useState(false);
-
-  const [courses, setCourses] = useState(() => {
-    const saved = localStorage.getItem("courses");
-    return saved ? JSON.parse(saved) : initialCourses;
-  });
-
+  const [teachers, setTeachers] = useState([])
+  
+  const [courses, setCourses] = useState([]);
+  
   const [newCourse, setNewCourse] = useState({ name: "", teacher: "" });
   // 🔎 Search state  1 (START FILTERING)
   const [search, setSearch] = useState("");
+  
+  //  getting teachers for dropdown select
+  const fetchTeachers=async()=>{
+    try{
+    
+      const data = await getTeachers(token);
+      setTeachers(data)
+    }catch(err){
+      console.log("error fetching teachers",err)
+    }
+  }
+
+  const fetchCourses = async()=>{
+
+    try{
+      const res = await getAllCourses(token);
+      setCourses(res)
+    }catch(err){
+      console.error("error fetching courses")
+    }
+  }
+
+  useEffect(()=>{
+    fetchCourses();
+    fetchTeachers();
+  },[])
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setNewCourse((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleAdd = (e) => {
+  const handleAdd = async(e) => {
     e.preventDefault();
     if (newCourse.name && newCourse.teacher) {
-      const updated = [...courses, { id: Date.now(), ...newCourse }];
-      setCourses(updated);
-      localStorage.setItem("courses", JSON.stringify(updated));
-      setNewCourse({ name: "", teacher: "" });
-      setIsOpen(false);
-       // ✅ Show success toast
-    toast.success("Course added successfully!");
+      try{
+        const courseData = {
+          name: newCourse.name,
+          code: newCourse.code,
+          teacherId: newCourse.teacher,
+          creditHours: newCourse.creditHours,
+          duration: newCourse.duration
+        }
+
+
+        const savedCourses = await createCourse(courseData, token);
+        setCourses([...courses , savedCourses]);
+        fetchCourses();
+    
+        setNewCourse({ name: "", teacher: "" });
+        setIsOpen(false);
+         // ✅ Show success toast
+      toast.success("Course added successfully!");
+
+      }catch(err){
+           console.error("error creating course")
+      }
+
     }
   };
 
-  const handleDelete = (id) => {
-    const updated = courses.filter((course) => course.id !== id);
-    setCourses(updated);
-    localStorage.setItem("courses", JSON.stringify(updated));
+  const handleDelete = async(id) => {
+     try{
+      if(!token) return alert("you are not logged in");
+
+      await deleteCourseById(token,id);
+
+      const updated = courses.filter((c)=> c._id !== id);
+      setCourses(updated)
+
+      toast.success("Course deleted successfully")
+
+     }catch(err){
+      console.error("error deleting course", err.message)
+     }
   };
 
   const columns = [
+    { key: "code", label: "Course Code" },
     { key: "name", label: "Course Name" },
     { key: "teacher", label: "Teacher" },
-    {key:"credits", label:"Credit Hours"},
-    {key:"duration", label:"Duration"},
+    {key:"creditHours", label:"Credit Hours"},
+    {key:"duration", label:"Duration (hrs)"},
   ];
 
   // 🔎 Filter courses based on search   2
-  const filteredCourses = courses.filter((course) =>
-    course.name.toLowerCase().includes(search.toLowerCase())
-  );
+  // const filteredCourses = courses.filter((course) =>
+  //   course.name.toLowerCase().includes(search.toLowerCase())
+  // );
   // THIS IS FOR TYPING THE EXACT FULL NAME OF COURSE AFTER WHICH COURSE WILL BE SHOWN
 
   // const filteredCourses = courses.filter((course) =>
@@ -107,6 +163,15 @@ function Courses() {
             <form className="space-y-4" onSubmit={handleAdd}>
               <input
                 type="text"
+                name="code"
+                placeholder="Enter course code"
+                value={newCourse.code}
+                onChange={handleChange}
+                className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                required
+              />
+              <input
+                type="text"
                 name="name"
                 placeholder="Enter course name"
                 value={newCourse.name}
@@ -114,35 +179,44 @@ function Courses() {
                 className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
               />
+
+              <div className="flex gap-2">
+
               <input
                 type="number"
-                name="credits"
+                name="creditHours"
                 placeholder="Enter credithours"
-                value={newCourse.credits}
+                value={newCourse.creditHours}
                 onChange={handleChange}
                 className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
               />
-
-              <input
-                type="text"
-                name="teacher"
-                placeholder="Enter teacher name"
-                value={newCourse.teacher}
-                onChange={handleChange}
-                className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                required
-              />
-
               <input
                 type="number"
                 name="duration"
-                placeholder="course duration"
+                placeholder="Course duration"
                 value={newCourse.duration}
                 onChange={handleChange}
                 className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
               />
+              </div>
+
+           
+             <select 
+             name="teacher"
+             value={newCourse.teacher}
+             onChange={handleChange}
+             className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+             required>
+              <option value="">Select Teacher</option>
+              {teachers.map((t)=>(
+                <option key={t._id} value={t._id}>
+                  {t.name} ({t.subject})
+                </option>
+
+              ))}
+             </select>
 
               <div className="flex justify-end gap-3">
                 <button
@@ -154,6 +228,7 @@ function Courses() {
                 </button>
                 <button
                   type="submit"
+                  onClick={()=>console.log("clicked")}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow"
                 >
                   Save

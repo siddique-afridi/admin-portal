@@ -8,6 +8,7 @@ const studentSchema = new mongoose.Schema({
   age: { type: Number },
   gender: { type: String, enum: ["male", "female", "other"] },
   contact: { type: String },
+  courses: [{ type: mongoose.Schema.Types.ObjectId, ref: "Course" }],
   teacher: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Teacher"

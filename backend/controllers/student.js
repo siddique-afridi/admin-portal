@@ -1,7 +1,8 @@
 
 const Student = require ('../models/Students');
 const getNextRollNo = require("../utils/studentRoll")
-const User = require('../models/User')
+const User = require('../models/User');
+const Course = require('../models/Course');
 
 // Get All Students (with filters)
 exports.getStudents = async (req, res) => {
@@ -44,7 +45,15 @@ exports.getStudents = async (req, res) => {
 exports.createStudent = async(req, res)=> {
   console.log("Incoming student data:", req.body);
     try{
+
       const rollNo = await getNextRollNo();
+      const {courses} = req.body;
+
+         const course = await Course.findById(courses);
+
+         console.log("course found", course)
+         if(!course) return res.status(404).json({ message: "Course not found" });
+         
 
         const student = new Student({
             ...req.body,
@@ -52,8 +61,10 @@ exports.createStudent = async(req, res)=> {
         });
         await student.save();
         console.log("student data", student)
-        // res.status(201).json(student);
-
+         //after creating student and selecting course we will  now push this student to that course document
+          course.students.push(student._id);
+          await course.save()
+        // res.status(201).json(student)
         const {email,password} = req.body;
         console.log("email", email)
         
@@ -65,14 +76,12 @@ exports.createStudent = async(req, res)=> {
             profile: student._id
           });
           console.log("User created:", user);
+
         } catch (err) {
           console.error("Error creating user:", err);
         }
-        
-       
       res.json({message: "Student added successfully",student})
-        
-
+      
     }catch(err){
         return res.status(400).json({message: "Error creating student", error: err.message});
     }

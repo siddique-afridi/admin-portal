@@ -17,11 +17,10 @@ function Table({ data, columns, onDelete, rowsPerPage = 5, onView }) {
     if (page >= 1 && page <= totalPages) setCurrentPage(page);
   };
 
-  
   // for generating page numbers
   function PageNumbers({ totalPages, currentPage, handlePageChange }) {
     const pageButtons = [];
-  
+
     for (let i = 1; i <= totalPages; i++) {
       pageButtons.push(
         <button
@@ -35,12 +34,11 @@ function Table({ data, columns, onDelete, rowsPerPage = 5, onView }) {
         </button>
       );
     }
-  
+
     return <div className="flex gap-2">{pageButtons}</div>;
   }
 
   return (
-    
     <div className="w-full">
       {/* Table */}
       <div className="overflow-hidden rounded-lg border border-gray-200 shadow-sm">
@@ -48,10 +46,7 @@ function Table({ data, columns, onDelete, rowsPerPage = 5, onView }) {
           <thead className="bg-gray-100 text-gray-700">
             <tr>
               {columns.map((col) => (
-                <th
-                  key={col.key}
-                  className="py-3 px-4 text-left font-medium"
-                >
+                <th key={col.key} className="py-3 px-4 text-left font-medium">
                   {col.label}
                 </th>
               ))}
@@ -65,13 +60,16 @@ function Table({ data, columns, onDelete, rowsPerPage = 5, onView }) {
                   key={item._id}
                   className="odd:bg-white even:bg-gray-50 hover:bg-gray-100 transition"
                 >
-                 {columns.map((col) => (
-  <td key={col.key} className="py-3 px-4">
-    {typeof item[col.key] === "object" && item[col.key] !== null
-      ? item[col.key].name || "N/A" // show teacher name if teacher object
-      : item[col.key]}
-  </td>
-))}
+                  {columns.map((col) => (
+                    <td key={col.key} className="py-3 px-4">
+                      {Array.isArray(item[col.key])
+                        ? item[col.key].map((course) => course.name).join(", ")
+                        : typeof item[col.key] === "object" &&
+                          item[col.key] !== null
+                        ? item[col.key].name || "N/A"
+                        : item[col.key]}
+                    </td>
+                  ))}
                   <td className="py-3 px-4 text-right">
                     <button
                       onClick={() => onView(item)}
@@ -107,8 +105,8 @@ function Table({ data, columns, onDelete, rowsPerPage = 5, onView }) {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mt-4">
           {/* Row info */}
           <span className="text-sm text-gray-600">
-            Showing <b>{startIndex + 1}</b>–
-            <b>{endIndex}</b> of <b>{data.length}</b> records
+            Showing <b>{startIndex + 1}</b>–<b>{endIndex}</b> of{" "}
+            <b>{data.length}</b> records
           </span>
 
           {/* Page info + controls */}
@@ -151,7 +149,6 @@ function Table({ data, columns, onDelete, rowsPerPage = 5, onView }) {
         </div>
       )}
     </div>
-
   );
 }
 

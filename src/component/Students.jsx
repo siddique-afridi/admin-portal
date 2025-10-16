@@ -6,10 +6,11 @@ import ClassSelect from "../component/ui/ClassSelect";
 import { CSVLink } from "react-csv";
 import { ProfileImageUpload } from "./ProfileImageUpload";
 import { getTeachers } from "../api/teacherApi";
+import { getAllCourses } from "../api/coursesApi";
 
 function Students() {
   const [teachers, setTeachers] = useState([]); //for storing teachers
-
+  const [courses, setCourses] = useState([])
   const [selectedClass, setSelectedClass] = useState(""); // class filter
 
   const [isOpen, setIsOpen] = useState(false);
@@ -23,12 +24,11 @@ function Students() {
     teacher: ""
   });
   const [selectedStudent, setSelectedStudent] = useState(null); //  for details modal
-
   // filtering
   const [search, setSearch] = useState("");
-
   // use state for selecting gender
   const [gender, setGender] = useState("");
+  const token = localStorage.getItem("token");
 
   //fetch students when page loads//////////////
   // Fetch students (with filters if applied)
@@ -63,10 +63,17 @@ function Students() {
     };
   }, [selectedStudent]);
 
+  // fetch courses for enrolling students
+  const fetchCourses = async()=>{
+    const data = await getAllCourses(token)
+
+    setCourses(data);
+
+  }
+
   // fetch teachers to store them in state to display them on ui in select
-  useEffect(() => {
+  useEffect(() => {    
     const fetchTeachers = async () => {
-      const token = localStorage.getItem("token");
       if(!token){
         console.log("no token in localstorage")
       }
@@ -75,7 +82,7 @@ function Students() {
       setTeachers(data);
       console.log("i am teachers array", data);
     };
-
+    fetchCourses();
     fetchTeachers();
   }, []);
 
@@ -96,7 +103,8 @@ function Students() {
           age: newStudent.age,
           gender: gender,
           contact: newStudent.contact,
-          teacher: newStudent.teacher,
+          courses: newStudent.courses
+          // teacher: newStudent.teacher,
         };
         // Call backend to save in DB
         const token = localStorage.getItem("token")
@@ -104,7 +112,7 @@ function Students() {
         console.log("Selected student:", selectedStudent);
         // update with new student
         setStudents([...students, savedStudent]);
-
+        fetchData();
         // Reset form
         setNewStudent({
           name: "",
@@ -115,7 +123,8 @@ function Students() {
           city: "",
           profession: "",
           contact: "",
-          teacher: ""
+          courses: "",
+          // teacher: ""
         });
         setIsOpen(false);
         console.log("checking...");
@@ -209,7 +218,7 @@ function Students() {
 
           <button
             onClick={() => setIsOpen(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition"
+            className="cursor-pointer px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition"
           >
             + Add Student
           </button>
@@ -269,7 +278,7 @@ function Students() {
               />
 
               <input 
-              type="email"
+              type="email"  
               name="email"
               placeholder="Enter email"
               value={newStudent.email}
@@ -287,6 +296,38 @@ function Students() {
               required />
 
               <div className="flex gap-2.5">
+                <select
+                  name="teacher"
+                  value={newStudent.teacher}
+                  onChange={handleChange}
+                  className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  
+                >
+                  <option value="">Select Teacher</option>
+                  {teachers.map((t) => (
+                    <option key={t._id} value={t._id}>
+                      {t.name} ({t.subject})
+                    </option>
+                  ))}   
+                </select>
+
+                <select
+                  name="courses"
+                  value={newStudent.courses}
+                  onChange={handleChange}
+                  className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  
+                >
+                  <option value="">Select Course</option>
+                  {courses.map((c) => (
+                    <option key={c._id} value={c._id}>
+                      {c.name}
+                    </option>
+                  ))}   
+                </select>
+              </div>
+
+              <div className="flex gap-2">
                 <input
                   type="text"
                   name="class"
@@ -297,21 +338,6 @@ function Students() {
                   className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   required
                 />
-                <select
-                  name="teacher"
-                  value={newStudent.teacher}
-                  onChange={handleChange}
-                  className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  required
-                >
-                  <option value="">Select Teacher</option>
-                  {teachers.map((t) => (
-                    <option key={t._id} value={t._id}>
-                      {t.name} ({t.subject})
-                    </option>
-                  ))}
-                </select>
-              </div>
 
               <input
                 type="text"
@@ -323,6 +349,8 @@ function Students() {
                 className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
               />
+
+              </div>
 
               <input
                 type="text"
@@ -366,7 +394,7 @@ function Students() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow"
+                  className="cursor-pointer px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow"
                 >
                   Save
                 </button>

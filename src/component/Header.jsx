@@ -1,12 +1,10 @@
 import React from "react";
 import { BellIcon, User, ChevronDown, Menu, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
-import { ThemeContext } from "../component/ThemeContext";
 import { useContext } from "react";
 
 
 const Header = ({ toggleSidebar, isSidebarOpen}) => {
-  const { darkMode, toggleDarkMode } = useContext(ThemeContext);
 
   return (
     <div className="w-full dark:bg-black fixed bg-white flex border-b border-gray-200 z-30">
@@ -36,16 +34,6 @@ const Header = ({ toggleSidebar, isSidebarOpen}) => {
         <div className="flex dark:bg-black items-center space-x-8">
           <button>
             <BellIcon className="w-4 h-4" />
-          </button>
-
-          <button
-           onClick={() => {
-            console.log("Header: Toggling dark mode");
-            toggleDarkMode();
-          }}
-            className="px-4 py-2 rounded bg-gray-300 dark:bg-gray-950 cursor-pointer"
-          >
-            {darkMode ? "☀️ Light Mode" : "🌙 Dark Mode"}
           </button>
 
 

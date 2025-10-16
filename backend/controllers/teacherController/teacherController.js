@@ -37,7 +37,7 @@ exports.createTeacher = async(req, res)=> {
 
 exports.getTeachers = async(req, res)=> {
     try{
-        const teachers = await Teacher.find();
+        const teachers = await Teacher.find().populate("courses", "name");
 
         res.json(teachers);
 

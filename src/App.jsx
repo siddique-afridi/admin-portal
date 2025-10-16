@@ -10,15 +10,15 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import AdminProfile from "./component/AdminProfile";
 import Register from "./component/Register";
-import { ThemeProvider } from ".//component/ThemeContext";
 import LoginSuccess from "./pages/LoginSuccess";
+import Result from "./component/Result/Result";
 
 
 function App() {
  //                        //Use themeContext for darkMode toggle instead of this method,using props drilling. its messy.
 
   return (
-    <ThemeProvider>
+  
 
     <div className="App">
     
@@ -70,6 +70,16 @@ function App() {
              </ProtectedRoute>
           }
           />
+        <Route
+          path="/results"
+          element={
+            <ProtectedRoute>
+             <DashboardLayout>
+                <Result/>
+              </DashboardLayout>
+             </ProtectedRoute>
+          }
+          />
 
         <Route
           path="/admin-profile"
@@ -89,7 +99,6 @@ function App() {
       <ToastContainer position="top-center" autoClose={1000} />
         
     </div>
-          </ThemeProvider>
   );
 }
 

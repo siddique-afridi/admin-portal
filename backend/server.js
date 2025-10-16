@@ -62,6 +62,9 @@ app.use("/api/admin", require("./routes/adminRoutes"));
 app.use('/api/students', require('./routes/studentRoutes'));
 app.use('/api/teachers', require('./routes/teacherRoutes'));
 app.use('/api/dashboard-stats', require('./routes/dashboard-stats'))
+app.use('/api/results', require('./routes/ResultRoutes'))
+app.use('/api/courses', require('./routes/courseRoutes'))
+app.use('/api/result-data', require('./routes/result-dataRoute'))
 // app.use('/api/dashboard', require('./routes/adminRoutes'));
 
 

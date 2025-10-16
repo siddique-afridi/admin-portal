@@ -1,7 +1,7 @@
 import { useAuth } from './AuthContext';
 import logo from '../assets/logo.png'
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard,GraduationCap, Users, BookOpen, LogOut } from 'lucide-react';
+import { LayoutDashboard,GraduationCap, Users, BookOpen, LogOut, Award } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
 
 
@@ -106,6 +106,23 @@ return (
             className={`w-5 h-5 ${isActive ? "fill-current text-blue-500" : "text-gray-600"}`}
           />
           <span>Courses</span>
+        </>
+      )}
+    </NavLink>
+    <NavLink
+      to="/results"
+      className={({ isActive }) =>
+        `flex items-center gap-3 w-full rounded-2xl px-5 py-2 transition ${
+          isActive ? " text-blue-500" : "hover:bg-blue-100"
+        }`
+      }
+    >
+      {({ isActive }) => (
+        <>
+          <Award
+            className={`w-5 h-5 ${isActive ? "fill-current text-blue-500" : "text-gray-600"}`}
+          />
+          <span>Result</span>
         </>
       )}
     </NavLink>

@@ -7,21 +7,38 @@ import { CSVLink } from "react-csv";
 import { ProfileImageUpload } from "./ProfileImageUpload";
 import { getTeachers } from "../api/teacherApi";
 import { getAllCourses } from "../api/coursesApi";
+import StudentMap from "./Map/StudentMap";
+
+const cities = [
+  "Lahore",
+  "Karachi",
+  "Islamabad",
+  "Faisalabad",
+  "Rawalpindi",
+  "Multan",
+  "Peshawar",
+  "Quetta",
+  "Hyderabad",
+  "Sialkot",
+];
 
 function Students() {
   const [teachers, setTeachers] = useState([]); //for storing teachers
-  const [courses, setCourses] = useState([])
+  const [courses, setCourses] = useState([]);
   const [selectedClass, setSelectedClass] = useState(""); // class filter
 
   const [isOpen, setIsOpen] = useState(false);
-
+  // const [city, setCity] = useState("Lahore");
+  // const [nearBystudents, setnearByStudents] = useState([]);
+  // const [loading, setLoading] = useState(false);
+  // const [message, setMessage] = useState("")
   const [students, setStudents] = useState([]); //empty array in state to store students state loaded from backend through fetchData().
 
   const [newStudent, setNewStudent] = useState({
     name: "",
     class: "",
     age: "",
-    teacher: ""
+    teacher: "",
   });
   const [selectedStudent, setSelectedStudent] = useState(null); //  for details modal
   // filtering
@@ -29,6 +46,19 @@ function Students() {
   // use state for selecting gender
   const [gender, setGender] = useState("");
   const token = localStorage.getItem("token");
+
+  //  const cities = ["Karachi", "Lahore", "Islamabad", "Faisalabad", "Multan","Peshawar", "Quetta", "Hyderabad", "Sialkot"];
+
+// nearby students by city
+  // const handleSearch = async () => {
+  //   setLoading(true);
+  //   const res = await fetch(`http://localhost:5000/api/students/nearbyCity?city=${city}&distance=50000`);
+  //   const data = await res.json();
+  //   setnearByStudents(data.students || []);
+  //   setMessage(data.message)
+  //   setLoading(false);
+  // };
+
 
   //fetch students when page loads//////////////
   // Fetch students (with filters if applied)
@@ -64,18 +94,17 @@ function Students() {
   }, [selectedStudent]);
 
   // fetch courses for enrolling students
-  const fetchCourses = async()=>{
-    const data = await getAllCourses(token)
+  const fetchCourses = async () => {
+    const data = await getAllCourses(token);
 
     setCourses(data);
-
-  }
+  };
 
   // fetch teachers to store them in state to display them on ui in select
-  useEffect(() => {    
+  useEffect(() => {
     const fetchTeachers = async () => {
-      if(!token){
-        console.log("no token in localstorage")
+      if (!token) {
+        console.log("no token in localstorage");
       }
       const data = await getTeachers(token);
 
@@ -103,12 +132,13 @@ function Students() {
           age: newStudent.age,
           gender: gender,
           contact: newStudent.contact,
-          courses: newStudent.courses
+          courses: newStudent.courses,
+          city: newStudent.city,
           // teacher: newStudent.teacher,
         };
         // Call backend to save in DB
-        const token = localStorage.getItem("token")
-        const savedStudent = await createStudent(studentData,token);
+        const token = localStorage.getItem("token");
+        const savedStudent = await createStudent(studentData, token);
         console.log("Selected student:", selectedStudent);
         // update with new student
         setStudents([...students, savedStudent]);
@@ -117,7 +147,7 @@ function Students() {
         setNewStudent({
           name: "",
           email: "",
-          password:"",
+          password: "",
           class: "",
           age: "",
           city: "",
@@ -141,13 +171,13 @@ function Students() {
   const handleDelete = async (id) => {
     try {
       const token = localStorage.getItem("token"); // ✅ get token
-      console.log("delete id", id)
+      console.log("delete id", id);
 
       if (!token) {
         alert("You are not logged in!");
         return;
       }
-      await deleteStudent(id,token);
+      await deleteStudent(id, token);
 
       const updated = students.filter((s) => s._id !== id);
       setStudents(updated);
@@ -244,6 +274,51 @@ function Students() {
           onDelete={handleDelete}
           onView={handleView}
         />
+        <StudentMap/>
+
+        {/* <div className="p-6 space-y-6">
+      <h2 className="text-xl font-bold"> Find Students by City</h2>
+
+      <div className="flex gap-3 items-center">
+        <select
+          className="border p-2 rounded"
+          value={city}
+          onChange={(e) => setCity(e.target.value)}
+        >
+          {cities.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+
+        <button
+          onClick={handleSearch}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
+          Find Nearby Students
+        </button>
+      </div>
+
+      {loading && <p>Loading...</p>}
+
+      {message !=="" && <p className="text-red-600">{message}</p> }
+
+      {nearBystudents.length > 0 && (
+        <ul className="space-y-2 mt-4">
+          {nearBystudents.map((s) => (
+            <li key={s._id} className="border p-2 rounded shadow-sm flex justify-between">
+              <span>{s.name}</span>
+              <span className="text-gray-500 text-sm">
+                {s.location?.address || "No address"}
+              </span>
+              <span>{s.class}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div> */}
+
         {/* ) : filteredStudents.length > 0 ? (
           <Table
             data={filteredStudents}
@@ -277,23 +352,25 @@ function Students() {
                 required
               />
 
-              <input 
-              type="email"  
-              name="email"
-              placeholder="Enter email"
-              value={newStudent.email}
-              onChange={handleChange}
-              className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              required />
+              <input
+                type="email"
+                name="email"
+                placeholder="Enter email"
+                value={newStudent.email}
+                onChange={handleChange}
+                className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                required
+              />
 
-              <input 
-              type="password"
-              name="password"
-              placeholder="Enter password"
-              value={newStudent.password}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-              required />
+              <input
+                type="password"
+                name="password"
+                placeholder="Enter password"
+                value={newStudent.password}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                required
+              />
 
               <div className="flex gap-2.5">
                 <select
@@ -301,14 +378,13 @@ function Students() {
                   value={newStudent.teacher}
                   onChange={handleChange}
                   className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  
                 >
                   <option value="">Select Teacher</option>
                   {teachers.map((t) => (
                     <option key={t._id} value={t._id}>
                       {t.name} ({t.subject})
                     </option>
-                  ))}   
+                  ))}
                 </select>
 
                 <select
@@ -316,14 +392,13 @@ function Students() {
                   value={newStudent.courses}
                   onChange={handleChange}
                   className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  
                 >
                   <option value="">Select Course</option>
                   {courses.map((c) => (
                     <option key={c._id} value={c._id}>
                       {c.name}
                     </option>
-                  ))}   
+                  ))}
                 </select>
               </div>
 
@@ -339,30 +414,47 @@ function Students() {
                   required
                 />
 
-              <input
-                type="text"
-                name="age"
-                placeholder="Enter age"
-                pattern="^\d{2}$"
-                value={newStudent.age}
-                onChange={handleChange}
-                className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                required
-              />
-
+                <input
+                  type="text"
+                  name="age"
+                  placeholder="Enter age"
+                  pattern="^\d{2}$"
+                  value={newStudent.age}
+                  onChange={handleChange}
+                  className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  required
+                />
               </div>
 
-              <input
-                type="text"
-                name="contact"
-                placeholder="Enter phone number"
-                pattern="^03\d{9}$"
-                title="Phone number must be 11 digits and start with 03"
-                value={newStudent.contact}
-                onChange={handleChange}
-                className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                required
-              />
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  name="contact"
+                  placeholder="Enter phone number"
+                  pattern="^03\d{9}$"
+                  title="Phone number must be 11 digits and start with 03"
+                  value={newStudent.contact}
+                  onChange={handleChange}
+                  className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  required
+                />
+
+                <select
+                  name="city"
+                  className="w-full border p-2 rounded"
+                  onChange={handleChange}
+                  value={newStudent.city}
+                  required
+                >
+                  <option value="">select city</option>
+                  {cities.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <p className="font-semibold mb-1">Gender</p>
               <div className="flex gap-2">
                 {options.map((option) => (

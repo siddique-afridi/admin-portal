@@ -9,6 +9,19 @@ const studentSchema = new mongoose.Schema({
   gender: { type: String, enum: ["male", "female", "other"] },
   contact: { type: String },
   courses: [{ type: mongoose.Schema.Types.ObjectId, ref: "Course" }],
+
+  location: {
+    type: {
+      type: String,
+      enum: ["Point"],
+      default: "Point",
+    },
+    coordinates: {
+      type: [Number], // [longitude, latitude]
+      default: [0, 0],
+    },
+    address: { type: String, default: "Unknown" },
+  },
   teacher: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Teacher"
@@ -17,7 +30,7 @@ const studentSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });
-
+studentSchema.index({ location: "2dsphere" });
 module.exports = mongoose.model('Student', studentSchema);
 
 

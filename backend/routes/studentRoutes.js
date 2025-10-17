@@ -1,7 +1,7 @@
 const express = require ('express');
 const auth = require ('../middleware/auth');
 // const validateCreateStudent = require('../middleware/studentValidator/createValidator')
-const { getStudents, createStudent, getStudentById, updateStudent, deleteStudent } = require('../controllers/student');
+const { getStudents, createStudent, getStudentById, updateStudent, deleteStudent, getNearByStudents,getNearbyStudentsByCity } = require('../controllers/student');
 // const updateValidator = require('../middleware/studentValidator/updateValidator');
 const upload = require('../config/multerConfig');
 const uploadProfile = require('../controllers/uploadProfile');
@@ -37,6 +37,12 @@ router.put('/:id',
 router.post('/upload-profile',
    upload.single("profileImage"),
     uploadProfile)
+
+
+    router.get('/nearbyCity', 
+      // getNearByStudents,
+      getNearbyStudentsByCity
+    );
 
 
 module.exports = router;

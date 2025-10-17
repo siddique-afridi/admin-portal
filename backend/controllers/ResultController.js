@@ -1,67 +1,60 @@
-
 const XLSX = require("xlsx");
-const Result = require('../models/ResultModel');
-const Student = require('../models/Students');
-const Teacher = require('../models/teacherModel/teachers');
-const Course = require('../models/Course')
+const Result = require("../models/ResultModel");
+const Student = require("../models/Students");
+const Teacher = require("../models/teacherModel/teachers");
+const Course = require("../models/Course");
 
+exports.createResult = async (req, res) => {
+  try {
+    const result = await Result.create(req.body);
 
+    res.status(201).json({ message: "Result created", result });
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+};
 
-exports.createResult = async(req,res)=>{
-    try{
-        const result = await Result.create(req.body);
-        
-        res.status(201).json({message:"Result created",result})
-    }catch(err){
-        res.status(400).json({message: err.message})
-    }
-}
+exports.getResults = async (req, res) => {
+  try {
+    const results = await Result.find()
+      .populate("student", "name")
+      .populate("teacher", "name")
+      .populate("course", "name");
 
+    res.json(results);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 
-exports.getResults = async(req,res)=>{
-    try{
-       const results = await Result.find()
-       .populate("student", "name")
-       .populate("teacher", "name")
-       .populate("course", "name")
+exports.deleteResult = async (req, res) => {
+  try {
+    await Result.findByIdAndDelete(req.params.id);
 
-       res.json(results);
-
-    }catch(err){
-        res.status(500).json({message: err.message});
-
-    }
-}
-
-exports.deleteResult = async(req,res)=>{
-    try{
-        await Result.findByIdAndDelete(req.params.id);
-
-        res.json({message: "Result deleted"})
-
-    }catch(err){
-        res.status(500).json({message: err.message})
-
-    }
-}
+    res.json({ message: "Result deleted" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 
 //  for loading data into result component
 
-exports.loadData = async(req,res)=>{
-    try{
-        //   next we will fetch teachers and also students that comes under that teacher, means that are referenced in teacher document.....10 Oct
+exports.loadData = async (req, res) => {
+  try {
+    //   next we will fetch teachers and also students that comes under that teacher, means that are referenced in teacher document.....10 Oct
 
-        const teachers = await Teacher.find().select("_id name");
+    const teachers = await Teacher.find().select("_id name");
 
-        const students = await Students.find().select("_id name");
-        // courses query will be added soon
-        
-        res.status(200).json({message:"teachers and students loaded", teachers, students})
-    }catch(err){
-        res.status(500).json({message: err.message})
-    }
-}
+    const students = await Student.find().select("_id name");
+    // courses query will be added soon
 
+    res
+      .status(200)
+      .json({ message: "teachers and students loaded", teachers, students });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 
 //  excel upload
 
@@ -69,29 +62,55 @@ exports.uploadResultsFromExcel = async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: "No file uploaded" });
 
-    // ✅ Read Excel file
+    // Read Excel
     const workbook = XLSX.readFile(req.file.path);
     const sheetName = workbook.SheetNames[0];
     const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
-
-    // ✅ Example of expected columns in Excel
-    // Student | Teacher | Course | MarksObtained | TotalMarks | Term | Remarks
+    console.log("excel data format", sheetData[0]);
 
     const resultsToInsert = [];
 
     for (const row of sheetData) {
-        // Match by name
-        const student = await Student.findOne({ name: row.studentName.trim() });
-        const teacher = await Teacher.findOne({ name: row.teacherName.trim() });
-        const course = await Course.findOne({ name: row.courseName.trim() });
-  
-        if (!student || !teacher || !course) {
-          console.log("Skipping row - invalid mapping:", row);
-          continue;
-        }
-    }
-    for (let row of sheetData) {
-      const percentage = (row.MarksObtained / row.TotalMarks) * 100;
+      //  Extract safely (force strings)
+      const student = String(row.student || "").trim();
+      const teacher = String(row.teacher || "").trim();
+      const course = String(row.course || "").trim();
+      const marksObtained = Number(row.marksObtained);
+      const totalMarks = Number(row.totalMarks);
+      const remarks = row.remarks ? String(row.remarks).trim() : "";
+      const term = row.term ? String(row.term).trim() : "";
+
+      if (!student || !teacher || !course) {
+        console.log(" Skipping row - missing student/teacher/course:", row);
+        continue;
+      }
+
+      //  Find records (ObjectId or name)
+      const studentRecord = /^[0-9a-fA-F]{24}$/.test(student)
+        ? await Student.findById(student)
+        : await Student.findOne({ name: student });
+
+      const teacherRecord = /^[0-9a-fA-F]{24}$/.test(teacher)
+        ? await Teacher.findById(teacher)
+        : await Teacher.findOne({ name: teacher });
+
+      const courseRecord = /^[0-9a-fA-F]{24}$/.test(course)
+        ? await Course.findById(course)
+        : await Course.findOne({ name: course });
+
+      console.log("Mapping check:", {
+        studentRecord,
+        teacherRecord,
+        courseRecord,
+      });
+
+      if (!studentRecord || !teacherRecord || !courseRecord) {
+        console.log(" Skipping row - invalid mapping:", row);
+        continue;
+      }
+
+      //  Calculate grade
+      const percentage = (marksObtained / totalMarks) * 100;
       let grade;
       if (percentage >= 90) grade = "A+";
       else if (percentage >= 80) grade = "A";
@@ -100,23 +119,33 @@ exports.uploadResultsFromExcel = async (req, res) => {
       else if (percentage >= 50) grade = "D";
       else grade = "F";
 
+      //  Push data for bulk insert
       resultsToInsert.push({
-        student: row.Student,   // must be student _id or name you match
-        teacher: row.Teacher,   // same logic
-        course: row.Course,
-        marksObtained: row.MarksObtained,
-        totalMarks: row.TotalMarks,
-        term: row.Term,
+        student: studentRecord._id,
+        teacher: teacherRecord._id,
+        course: courseRecord._id,
+        marksObtained,
+        totalMarks,
+        term,
         grade,
-        remarks: row.Remarks,
+        remarks,
       });
     }
 
-    // ✅ Insert all records into DB
+    if (resultsToInsert.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "No valid rows found (check names in Excel)" });
+    }
+
     const savedResults = await Result.insertMany(resultsToInsert);
-    res.status(201).json({ message: "Results uploaded successfully", savedResults });
+    res
+      .status(201)
+      .json({ message: "Results uploaded successfully", savedResults });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Failed to upload results", error: error.message });
+    console.error(" Error uploading results:", error);
+    res
+      .status(500)
+      .json({ message: "Failed to upload results", error: error.message });
   }
-}
+};

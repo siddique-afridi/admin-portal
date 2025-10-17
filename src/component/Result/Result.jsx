@@ -14,7 +14,6 @@ import { toast } from "react-toastify";
 // 2 in select option display names but send _id as value for students and teachers and courses
 const termOptions = ["Midterm", "Final", "Quiz", "Assignment", "Project"];
 
-
 const Result = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [result, setResult] = useState([]);
@@ -104,32 +103,35 @@ const Result = () => {
 
   const columns = [
     { key: "student", label: "Student Name" },
+    { key: "course", label: "Course" },
     { key: "marksObtained", label: "ObtMarks" },
-    { key: "totalMarks", label: "Total Marks" },
+    { key: "totalMarks", label: "TotMarks" },
     { key: "grade", label: "Grade" },
     { key: "term", label: "Term" },
     { key: "remarks", label: "Remarks" },
   ];
 
-
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-  
+
     const formData = new FormData();
     formData.append("file", file);
-  
+
     const token = localStorage.getItem("token");
-  
+
     try {
-      const res = await fetch("http://localhost:5000/api/results/upload-excel", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
-  
+      const res = await fetch(
+        "http://localhost:5000/api/results/upload-excel",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
+
       const data = await res.json();
       toast.success(data.message);
       getResults(); // refresh results table
@@ -138,7 +140,6 @@ const Result = () => {
       toast.error("Failed to upload file");
     }
   };
-  
 
   return (
     <div>
@@ -161,21 +162,20 @@ const Result = () => {
             <Table data={result} columns={columns} onDelete={handleDelete} />
           </div>
           <div className="flex justify-end mb-4 gap-3">
-  <input
-    type="file"
-    accept=".xlsx,.csv"
-    id="fileInput"
-    onChange={handleFileUpload}
-    className="hidden"
-  />
-  <label
-    htmlFor="fileInput"
-    className="px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 cursor-pointer"
-  >
-    Upload Excel
-  </label>
-</div>
-
+            <input
+              type="file"
+              accept=".xlsx,.csv"
+              id="fileInput"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+            <label
+              htmlFor="fileInput"
+              className="px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 cursor-pointer"
+            >
+              Upload Excel
+            </label>
+          </div>
 
           {isOpen && (
             <div className="fixed inset-0 bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50">

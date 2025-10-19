@@ -33,7 +33,7 @@ router.get(
     const frontendURL =
       process.env.NODE_ENV === "production"
         ? "https://admin-portal-green-zeta.vercel.app" // 👈 your deployed frontend
-        : "http://localhost:5173"; // 👈 local developme
+        : "http://localhost:5173"; // 👈 local development  
 
      // Redirect with JWT to frontend
      res.redirect(`${frontendURL}/login-success?token=${token}`);

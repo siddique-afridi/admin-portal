@@ -9,21 +9,27 @@ require('./config/passport');
 
 
 // const authroutes = require ('./controllers/auth');
+const app = express();
 
 dotenv.config();
 console.log("🌍 Environment Mode:", process.env.NODE_ENV);
-const app = express();
+app.use(cors({
+  origin:[ "http://localhost:5173", "https://admin-portal-green-zeta.vercel.app", "https://www.admin-portal-green-zeta.vercel.app",],  // frontend URL
+  credentials: true,
+  exposedHeaders: ["Authorization"], // allow frontend to read it
+}));
+
+app.use((req, res, next) => {
+  console.log("🌍 Request Origin:", req.headers.origin);
+  next();
+});
+
 
 app.use(apiLogger);
 
 app.use(express.json());
 app.use(passport.initialize());
 
-app.use(cors({
-  origin:[ "http://localhost:5173", "https://admin-portal-green-zeta.vercel.app"],  // frontend URL
-  credentials: true,
-  exposedHeaders: ["Authorization"], // ✅ allow frontend to read it
-}));
 
 
 

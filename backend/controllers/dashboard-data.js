@@ -1,5 +1,6 @@
 
 const Student = require('../models/Students');
+const Course = require('../models/Course');
 const Teacher = require('../models/teacherModel/teachers')
 
 
@@ -7,6 +8,7 @@ exports.getDashboardData = async(req,res)=>{
     try{
         const teachers = await Teacher.find();
         const students = await Student.find();
+        const courses = await Course.find();
 
         // now we will add class stats logic here to get total teachers and students in the same class
 
@@ -54,6 +56,7 @@ exports.getDashboardData = async(req,res)=>{
         res.status(200).json({
             teachers,
             students,
+            courses,
             stats: classStats,
           });
         } catch (error) {

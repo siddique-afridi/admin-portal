@@ -4,6 +4,7 @@ import { useAuth } from "./AuthContext";
 import { User, Lock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
+import socket from "../socket"
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -22,6 +23,19 @@ function Login() {
       return () => clearInterval(timer);
     }
   }, [cooldown]);
+
+
+   // Listen for login events (this will trigger when ANY user logs in)
+  useEffect(() => {
+    socket.on("userLoggedIn", (data) => {
+      console.log("⚡ Server says:", data);
+      alert(data.message+ data.user.role);
+    });
+
+    return () => socket.off("userLoggedIn");
+  }, []);
+
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -48,7 +62,7 @@ function Login() {
         setError("Unexpected response. Check backend flow.");
       }
     } catch (err) {
-      setError("Server error");
+      setError("API not hitting");
     }
   };
 
@@ -64,8 +78,10 @@ function Login() {
 
       const data = await res.json();
 
-      if (!res.ok) {
-        return setError(data.message || "OTP verification failed");
+      if (!res.ok) { 
+         setError(data.message || "OTP verification failed");
+        setOtp("");
+        return;
       }
 
       // extract message from header of verifyOtp from backend
@@ -99,7 +115,7 @@ function Login() {
   //  resend otp function
 
   const resendOtp = async () => {
-    if (cooldown > 0) return; //it will prevent clicking when timer is active
+    // if (cooldown > 0) return; //it will prevent clicking when timer is active
     try {
       const res = await fetch("http://localhost:5000/api/auth/resend-otp", {
         method: "POST",
@@ -109,15 +125,26 @@ function Login() {
 
       const data = await res.json();
       setOtp("");
+      if(res.status === 429) { 
+        setError(data.message);
+
+        setTimeout(() => {
+          setError("")
+          
+        }, 50000);
+
+        setCooldown(300)
+      setMessage("")}
+
       if (res.ok) {
         setMessage(data.message); // ✅ "New OTP sent to your email"
         setCooldown(30);
         setError("");
-      } else {
+      } else{
         setError(data.message || "Failed to resend OTP");
       }
     } catch (err) {
-      setError("Server error");
+      setError("API not hitting");
     }
   };
 
@@ -237,6 +264,7 @@ function Login() {
               onChange={(e) => {
                 setOtp(e.target.value);
                 setMessage("");
+                setError("")
               }}
               placeholder="Enter OTP from email"
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"

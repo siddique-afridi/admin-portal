@@ -2,10 +2,13 @@ const express = require('express');
 const mongoose = require ('mongoose');
 const dotenv = require ('dotenv');
 const cors = require ('cors');
+const http = require('http');
+const {Server} = require('socket.io');
 const apiLogger = require('./middleware/apiLogger');
 const uploadProfile = require('./controllers/uploadProfile');
 const passport = require('passport')
 require('./config/passport');
+const limiter = require("./middleware/rateLimiter")
 
 
 // const authroutes = require ('./controllers/auth');
@@ -13,25 +16,47 @@ const app = express();
 
 dotenv.config();
 console.log("🌍 Environment Mode:", process.env.NODE_ENV);
+
 app.use(cors({
-  origin:[ "http://localhost:5173", "https://admin-portal-green-zeta.vercel.app", "https://www.admin-portal-green-zeta.vercel.app",],  // frontend URL
+  origin:[ "http://localhost:5173", "https://admin-portal-green-zeta.vercel.app", "https://www.admin-portal-green-zeta.vercel.app"],  // frontend URL
   credentials: true,
   exposedHeaders: ["Authorization"], // allow frontend to read it
 }));
+
+// creating http server and attaching socket.io
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: { origin: "http://localhost:5173", methods: ["GET", "POST"] },
+})
+
+// Storing the io instance globally so routes can use it
+app.set("io", io);
+
+// Basic socket connection log
+io.on("connection", (socket) => {
+  console.log("Socket connected:", socket.id);
+
+  socket.on("disconnect", () => {
+    console.log("Socket disconnected:", socket.id);
+  });
+});
+
+
 
 app.use((req, res, next) => {
   console.log("🌍 Request Origin:", req.headers.origin);
   next();
 });
 
-
 app.use(apiLogger);
 
 app.use(express.json());
 app.use(passport.initialize());
-
-
-
+// app.use(limiter);  
+app.use("/limit-check", limiter, async(req,res)=>{
+  
+  res.json({ message: "limit check route", data:{name: "khan", city: "kohat", contact: 23445234}})
+})
 
 // important if sending token in header instead of body
 app.use((_, res, next) => {
@@ -39,7 +64,6 @@ app.use((_, res, next) => {
     next();
   });
   
-
 mongoose.connect(process.env.MONGO_URI)
 .then(()=> console.log('MongoDB connected'))
 .catch(err=> console.error(err));
@@ -71,6 +95,9 @@ app.use('/api/dashboard-stats', require('./routes/dashboard-stats'))
 app.use('/api/results', require('./routes/ResultRoutes'))
 app.use('/api/courses', require('./routes/courseRoutes'))
 app.use('/api/result-data', require('./routes/result-dataRoute'))
+app.use('/api/chatbot', require("./routes/chatbotRoutes"))
+
+app.use('/aggregation', require('./routes/aggroute'))
 // app.use('/api/dashboard', require('./routes/adminRoutes'));
 
 
@@ -90,4 +117,14 @@ app.use((err, req, res, next) => {
 // })
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, ()=> console.log(`🚀 Server running on port ${process.env.PORT || 5000}`));
+server.listen(PORT, ()=> console.log(`🚀 Server running on port ${process.env.PORT || 5000}`));
+
+
+
+// socket.io integration
+// 1 install packages frontend, backend both
+// 2 import http from http, and Server from socket.io
+// 3 create http server and attach socket.io   means both will run on same server
+// 4 app.set()   make it global so every file can use it
+// 5 replace app.listen   >>to   server.listen 
+// 6 now just get the setted server (point 4) in a file where you want to emit some event

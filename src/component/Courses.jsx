@@ -4,13 +4,14 @@ import Table from "./Table";
 import { toast } from "react-toastify";
 import { createCourse, deleteCourseById, getAllCourses } from "../api/coursesApi";
 import { getTeachers } from "../api/teacherApi";
+import ErrorHandler from "./ErrorHandler";
 
 
 function Courses() {
   const token = localStorage.getItem("token")
   const [isOpen, setIsOpen] = useState(false);
   const [teachers, setTeachers] = useState([])
-  
+  const [error, setError] = useState("");
   const [courses, setCourses] = useState([]);
   
   const [newCourse, setNewCourse] = useState({ name: "", teacher: "" });
@@ -25,6 +26,7 @@ function Courses() {
       setTeachers(data)
     }catch(err){
       console.log("error fetching teachers",err)
+      setError("Our server is currently down. please try again later.")
     }
   }
 
@@ -42,7 +44,7 @@ function Courses() {
     fetchCourses();
     fetchTeachers();
   },[])
-
+if(error) return <ErrorHandler error={error} />
 
   const handleChange = (e) => {
     const { name, value } = e.target;

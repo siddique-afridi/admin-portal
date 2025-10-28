@@ -4,6 +4,8 @@ import Table from "./Table";
 import { toast } from "react-toastify";
 import { createTeacher, deleteTeacher, getTeachers } from "../api/teacherApi";
 import { getAllCourses } from "../api/coursesApi";
+import Chatbot from "./Chatbot/Chatbot";
+import ErrorHandler from "./ErrorHandler";
 
 function Teachers() {
   const [selectedTeacher, setSelectedTeacher] = useState(null);
@@ -12,6 +14,7 @@ function Teachers() {
   const [teachers, setTeachers] = useState([]); // step 1 state to load and save created teachers from backend
   const [newTeacher, setNewTeacher] = useState({ name: "", subject: "" }); // step 2 state to input details that we want to send to backend to store
   const [search, setSearch] = useState("");
+  const [error, setError] = useState("");
 
   const token = localStorage.getItem("token");
   // console.log("token", token)
@@ -29,15 +32,22 @@ function Teachers() {
   // };
 
   const fetchTeachers = async () => {
-    const data = await getTeachers(token);
-
-    setTeachers(data);
+    try{
+      const data = await getTeachers(token);
+  
+      setTeachers(data);
+      
+    }catch(err){
+      setError("Our server is currently down. please try again later.")  
+      console.error("Error fetching teachers", err);
+    }
   };
-
+  
   useEffect(() => {
     fetchTeachers();
     // fetchCourses();         ^^
   }, []);
+  if(error) return <ErrorHandler error={error} />
 
   const handleChange = (e) => {
     const { name, value } = e.target; // step 3 targeted name and value of input
@@ -146,6 +156,8 @@ function Teachers() {
           onDelete={handleDelete}
           onView={handleView}
         />
+
+        <Chatbot/>
         {/* {search.trim()==="" ? (
 
           <Table data={teachers} columns={columns} onDelete={handleDelete} onView={handleView}/>

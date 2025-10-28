@@ -75,7 +75,7 @@ exports.login = async(req,res )=>{
         
         // 3  now send otp through email
         await transporter.sendMail({
-            from: `"School Principal" ${process.env.EMAIL_USER}>`,
+            from: `"School Principal" ${process.env.EMAIL_USER}`,
             to: user.email,
             subject: "Your OTP Code",
             text: `Your OTP code is ${otp}. It will expire in 10 seconds.`,
@@ -102,18 +102,15 @@ exports.resendOtp = async (req, res) => {
         return res.status(429).json({ message: "Please wait 30 seconds before requesting another OTP" });
       }
   
-  
       // Generate new OTP
       const newOtp = crypto.randomInt(100000, 999999).toString();
       user.otp = newOtp;
-      user.otpExpiry = Date.now() + 5*60 * 1000; // 5 min
+      user.otpExpiry = Date.now() + 60 * 1000; // 60s
       user.lastOtpSentAt = new Date(); 
       await user.save();
 
       console.log("Saved user with new OTP:", user);
    
-
-  
       // Setup nodemailer
       const transporter = nodemailer.createTransport({
         service: "gmail",
@@ -128,7 +125,7 @@ exports.resendOtp = async (req, res) => {
         from: `"School Principal" <${process.env.EMAIL_USER}>`,
         to: user.email,
         subject: "Your new OTP Code",
-        text: `Your new OTP code is ${newOtp}. It will expire in 5 minutes.`,
+        text: `Your new OTP code is ${newOtp}. It will expire in 60 seconds.`,
       });
   
       res.json({ message: "New OTP sent to your email." });
@@ -159,6 +156,16 @@ exports.verifyOtp = async (req, res) => {
      const payload = {id:user._id, email:user.email, name: user.username, role: user.role};
 
      const token = jwt.sign(payload, process.env.JWT_SECRET, {expiresIn:'1h'}); 
+
+
+    //  here we emit event to all connected clients
+      // Emit event to all connected clients
+      const io = req.app.get("io");
+      io.emit("userLoggedIn", {
+        message: `User ${user.username} has logged in`,
+        user: user,
+      });
+
 
      return res.header("Authorization", `Bearer ${token}`).json({
          message: 'Login successful',

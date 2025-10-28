@@ -15,7 +15,7 @@ const userSchema = new mongoose.Schema(
         type: mongoose.Schema.Types.ObjectId,
         refPath: "role",
     },
-    // otp
+    // otpg
     otp: { type: String, default: null },
     otpExpiry: { type: Date, default: null }   ,
     

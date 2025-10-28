@@ -5,9 +5,16 @@ const router = express.Router();
 const  auth = require ('../middleware/auth');
 const {login, register, verifyOtp, resendOtp} = require ('../controllers/auth');
 const {getMe} = require ('../controllers/userController');
+const limiter = require('../middleware/rateLimiter');
+const { body, validationResult } = require('express-validator');
 
 
-router.post('/register', register);
+
+router.post('/register', [
+  body('email').isEmail().normalizeEmail(),
+  body('password').isLength({ min: 6 })
+],
+  register);
 // router.post('/login', login);
 
 router.post(
@@ -32,8 +39,8 @@ router.get(
 
     const frontendURL =
       process.env.NODE_ENV === "production"
-        ? "https://admin-portal-green-zeta.vercel.app" // 👈 your deployed frontend
-        : "http://localhost:5173"; // 👈 local development  
+        ? "https://admin-portal-green-zeta.vercel.app" //deployed frontend
+        : "http://localhost:5173"; // local development  
 
      // Redirect with JWT to frontend
      res.redirect(`${frontendURL}/login-success?token=${token}`);
@@ -43,7 +50,9 @@ router.get(
 
 
 router.post("/verify-otp", verifyOtp);
-router.post("/resend-otp", resendOtp);
+router.post("/resend-otp",
+  limiter,
+  resendOtp);
 
 router.get('/me',auth, getMe);
 

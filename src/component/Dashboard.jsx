@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer,LabelList
 } from "recharts";
+import ErrorHandler from "./ErrorHandler";
 // import { getStudents } from "../api/studentApi";
 // import { getTeachers } from "../api/teacherApi";
 // import { getClassStats } from "../api/statsApi";
@@ -15,9 +16,11 @@ function Dashboard() {
   const navigate = useNavigate();
 
   const [students, setStudents] = useState([]);
+  const [courses, setCourses] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [classStats, setClassStats] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
 
 
@@ -110,10 +113,12 @@ useEffect(() => {
       const data = await getDashboardData();
       setTeachers(data.teachers || []);
       setStudents(data.students || []);
+      setCourses(data.courses || []);
       setClassStats(data.stats || []);
       console.log("Dashboard data loaded:", data);
     } catch (err) {
       console.error("Error fetching dashboard data:", err);
+      setError("Our server is currently down. please try again later.")
     } finally {
       setLoading(false);
     }
@@ -121,6 +126,7 @@ useEffect(() => {
 
   fetchDashboard();
 }, [isLoggedIn, navigate]);
+ if(error) return <ErrorHandler error={error} />
 
 if (!isLoggedIn) return null;
 if (loading) return <div className="p-8">Loading Dashboard...</div>;
@@ -145,7 +151,7 @@ if (loading) return <div className="p-8">Loading Dashboard...</div>;
         </div>
         <div className="p-6 bg-[linear-gradient(84deg,rgba(255,255,255,0)_-8.3%,#F6F8FA_100%)] rounded-lg shadow text-center">
           <h2 className="text-xl font-bold text-gray-800">Courses</h2>
-          {/* <p className="text-3xl font-semibold text-yellow-700">{courses.length}</p> */}
+          <p className="text-3xl font-semibold text-yellow-700">{courses.length}</p>
         </div>
       </div>
 

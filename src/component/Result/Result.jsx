@@ -144,7 +144,7 @@ const Result = () => {
   return (
     <div>
       <div className="flex">
-        <div className="flex-1 min-h-[90vh] border mt-2">
+        <div className="flex-1 min-h-[90vh] mt-2">
           <div className="px-4 pt-4 ">
             <div className="flex justify-between mb-3">
               <h1 className="text-2xl dark:bg-black font-semibold text-gray-800">

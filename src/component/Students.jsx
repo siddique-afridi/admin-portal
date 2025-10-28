@@ -8,6 +8,7 @@ import { ProfileImageUpload } from "./ProfileImageUpload";
 import { getTeachers } from "../api/teacherApi";
 import { getAllCourses } from "../api/coursesApi";
 import StudentMap from "./Map/StudentMap";
+import ErrorHandler from "./ErrorHandler";
 
 const cities = [
   "Lahore",
@@ -33,7 +34,7 @@ function Students() {
   // const [loading, setLoading] = useState(false);
   // const [message, setMessage] = useState("")
   const [students, setStudents] = useState([]); //empty array in state to store students state loaded from backend through fetchData().
-
+  
   const [newStudent, setNewStudent] = useState({
     name: "",
     class: "",
@@ -45,76 +46,80 @@ function Students() {
   const [search, setSearch] = useState("");
   // use state for selecting gender
   const [gender, setGender] = useState("");
+  const [error, setError] = useState("");
   const token = localStorage.getItem("token");
-
+  
   //  const cities = ["Karachi", "Lahore", "Islamabad", "Faisalabad", "Multan","Peshawar", "Quetta", "Hyderabad", "Sialkot"];
-
-// nearby students by city
+  
+  // nearby students by city
   // const handleSearch = async () => {
-  //   setLoading(true);
-  //   const res = await fetch(`http://localhost:5000/api/students/nearbyCity?city=${city}&distance=50000`);
-  //   const data = await res.json();
-  //   setnearByStudents(data.students || []);
-  //   setMessage(data.message)
-  //   setLoading(false);
-  // };
-
-
-  //fetch students when page loads//////////////
-  // Fetch students (with filters if applied)
-  const fetchData = async () => {
-    try {
-      const filters = {};
-      if (search) filters.search = search; // add search if typed
-      if (selectedClass) filters.class = selectedClass; // add class if chosen
-
-      const data = await getStudents(filters);
-      setStudents(data);
-    } catch (err) {
-      console.error("Error fetching students", err);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-    // the empty array below means as long as we are on students component data will not be fetched again from backend
-  }, [search, selectedClass]);
-  // //////////////////////////
-
-  useEffect(() => {
-    if (selectedStudent) {
-      document.body.style.overflow = "hidden"; // lock scroll
-    } else {
-      document.body.style.overflow = "auto"; // restore scroll
-    }
-
-    return () => {
-      document.body.style.overflow = "auto"; // cleanup
-    };
-  }, [selectedStudent]);
-
-  // fetch courses for enrolling students
-  const fetchCourses = async () => {
-    const data = await getAllCourses(token);
-
-    setCourses(data);
-  };
-
-  // fetch teachers to store them in state to display them on ui in select
-  useEffect(() => {
-    const fetchTeachers = async () => {
-      if (!token) {
-        console.log("no token in localstorage");
+    //   setLoading(true);
+    //   const res = await fetch(`http://localhost:5000/api/students/nearbyCity?city=${city}&distance=50000`);
+    //   const data = await res.json();
+    //   setnearByStudents(data.students || []);
+    //   setMessage(data.message)
+    //   setLoading(false);
+    // };
+    
+    
+    //fetch students when page loads//////////////
+    // Fetch students (with filters if applied)
+    const fetchData = async () => {
+      try {
+        const filters = {};
+        if (search) filters.search = search; // add search if typed
+        if (selectedClass) filters.class = selectedClass; // add class if chosen
+        
+        const data = await getStudents(filters);
+        setStudents(data);
+      } catch (err) {
+        setError("Our server is currently down. please try again later.")
+        console.error("Error fetching students", err);
       }
-      const data = await getTeachers(token);
-
-      setTeachers(data);
-      console.log("i am teachers array", data);
     };
-    fetchCourses();
-    fetchTeachers();
-  }, []);
-
+    
+    useEffect(() => {
+      fetchData();
+      // the empty array below means as long as we are on students component data will not be fetched again from backend
+    }, [search, selectedClass]);
+    // //////////////////////////
+    
+    useEffect(() => {
+      if (selectedStudent) {
+        document.body.style.overflow = "hidden"; // lock scroll
+      } else {
+        document.body.style.overflow = "auto"; // restore scroll
+      }
+      
+      return () => {
+        document.body.style.overflow = "auto"; // cleanup
+      };
+    }, [selectedStudent]);
+    
+    // fetch courses for enrolling students
+    const fetchCourses = async () => {
+      const data = await getAllCourses(token);
+      
+      setCourses(data);
+    };
+    
+    // fetch teachers to store them in state to display them on ui in select
+    useEffect(() => {
+      const fetchTeachers = async () => {
+        if (!token) {
+          console.log("no token in localstorage");
+        }
+        const data = await getTeachers(token);
+        
+        setTeachers(data);
+        console.log("i am teachers array", data);
+      };
+      fetchCourses();
+      fetchTeachers();
+    }, []);
+    
+    if(error) return <ErrorHandler error={error} />
+    
   const handleChange = (e) => {
     const { name, value } = e.target;
     setNewStudent((prev) => ({ ...prev, [name]: value }));
@@ -218,6 +223,8 @@ function Students() {
     { label: "Gender", key: "gender" },
     { label: "Contact", key: "contact" },
   ];
+
+
   // CSV download option for downloading record
   // 1 install and import dependencies
   // 2 paste the header like above according to columns

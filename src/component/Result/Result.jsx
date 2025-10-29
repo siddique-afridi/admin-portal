@@ -21,6 +21,7 @@ const Result = () => {
   const [students, setStudents] = useState([]);
   const [courses, setCourses] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
+  // const [search, setSearch] = useState("")
 
   const [formData, setFormData] = useState({
     student: "",
@@ -51,6 +52,36 @@ const Result = () => {
     fetchData();
     getResults();
   }, []);
+
+
+  let searchTimeout;
+
+
+//  search
+const handleSearch = (search) => {
+  // Clear any previous timer if the user is still typing
+  clearTimeout(searchTimeout);
+
+  // Start a new timer — only runs if user stops typing for 500ms
+  searchTimeout = setTimeout(async () => {
+    if (!search.trim()) {
+      // if input is empty, reload all results
+      getResults();
+      return;
+    }
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/results?search=${search}`);
+      const data = await res.json();
+      setResult(data);
+    } catch (err) {
+      console.error("Error fetching search results:", err);
+    }
+  }, 1000); // <-- debounce delay in ms (you can adjust this)
+};
+
+
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -150,6 +181,13 @@ const Result = () => {
               <h1 className="text-2xl dark:bg-black font-semibold text-gray-800">
                 Result
               </h1>
+
+              <input 
+              type="text"
+              onChange={(e)=>{handleSearch(e.target.value)}}
+              placeholder="search student by name"
+              className="border px-2 py-1 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              />
 
               <button
                 onClick={() => setIsOpen(true)}

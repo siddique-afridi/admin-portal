@@ -9,7 +9,7 @@ export async function getStudents(filters = {}) {
     headers: {
       Authorization: `Bearer ${token}`, // ✅ attach token
       "Content-Type": "application/json",
-    },
+    },  
   });
   return res.json();
 }

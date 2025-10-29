@@ -10,6 +10,7 @@ const router = express.Router();
 router.post('/', createResult);
 
 router.get('/', getResults);
+// router.get("/search", searchResults);
 
 router.delete('/:id', deleteResult);
 

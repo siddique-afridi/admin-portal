@@ -1,6 +1,11 @@
 import React, { useState } from "react";
 
-function Table({ data, columns, onDelete, rowsPerPage = 5, onView }) {
+function Table({ data=[], columns, onDelete, rowsPerPage = 5, onView }) {
+
+   if (!Array.isArray(data) || data.length === 0) {
+    return <p className="text-gray-500 text-center mt-4">No results found</p>;
+  }
+
   const [currentPage, setCurrentPage] = useState(1);
 
   // Total pages

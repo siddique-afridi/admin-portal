@@ -7,7 +7,7 @@ const Course = require("../models/Course");
 exports.createResult = async (req, res) => {
   try {
     const result = await Result.create(req.body);
-
+    
     res.status(201).json({ message: "Result created", result });
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -16,16 +16,65 @@ exports.createResult = async (req, res) => {
 
 exports.getResults = async (req, res) => {
   try {
-    const results = await Result.find()
-      .populate("student", "name")
-      .populate("teacher", "name")
-      .populate("course", "name");
+    const search = req.query.search || "";
+
+    console.time("getResultsQuery");
+    const results = await Result.aggregate([
+
+      
+      {
+        $lookup: {                                 //lookup always creates an array>>>>> to get singls document in the search we just $unwind it
+          from: "students",             
+          localField: "student",
+          foreignField: "_id",
+          as: "student",
+        },
+      },
+      
+      {
+       $match: {
+         $or: [
+           { "student.name": { $regex: search, $options: "i" } },
+           // { "teacher.name": { $regex: search, $options: "i" } },
+           // { "course.name": { $regex: search, $options: "i" } },
+           // { remarks: { $regex: search, $options: "i" } },
+         ],    
+       },
+     },
+      
+      { $unwind: "$student" },               // it flattens the student array created by lookup, returning a single document for each _id
+      {
+        $lookup: {
+          from: "teachers",
+          localField: "teacher",
+          foreignField: "_id",
+          as: "teacher",
+        },
+      },
+      { $unwind: "$teacher" },
+      {
+        $lookup: {
+          from: "courses",
+          localField: "course",
+          foreignField: "_id",
+          as: "course",
+        },
+      },
+      { $unwind: "$course" },
+      
+     
+      
+    ]);
+    console.timeEnd("getResultsQuery");
+    // console.log("execution time",results)
 
     res.json(results);
   } catch (err) {
+    console.error(" Error fetching results:", err);
     res.status(500).json({ message: err.message });
   }
 };
+
 
 exports.deleteResult = async (req, res) => {
   try {
